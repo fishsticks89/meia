@@ -1,0 +1,16 @@
+{
+    "configurations": [
+      {
+        "name": "Windows",
+        "intelliSenseMode": "clang-x64",
+        "includePath": ["${env:PROS_TOOLCHAIN}/arm-none-eabi/include", "${env:PROS_TOOLCHAIN}/lib/gcc/arm-none-eabi/6.3.1/include", "${workspaceRoot}", "${workspaceRoot}/include"],
+        "compileCommands": "${workspaceRoot}/compile_commands.json",
+        "browse": {
+          "path": ["${workspaceFolder}"],
+          "limitSymbolsToIncludedHeaders": true,
+          "databaseFilename": ""
+        }
+      }
+    ],
+    "version": 4
+  }

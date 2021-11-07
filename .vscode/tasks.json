@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "PROS MAKE All",
+        "type": "shell",
+        "command": "pros make all",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "PROS TERMINAL",
+        "type": "shell",
+        "command": "pros terminal",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "PROS MAKE and UPLOAD",
+        "type": "shell",
+        "command": "pros mu",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "PROS MAKE",
+        "type": "shell",
+        "command": "pros make",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      }
+    ]
+  }
