@@ -1,5 +1,6 @@
 #include "main.h"
 namespace meia {
+    /*
     double wheel_diameter;
     int motor_rpm;
     double gear_ratio;
@@ -9,4 +10,5 @@ namespace meia {
         motor_rpm = p_motor_rpm;
         gear_ratio = p_gear_ratio;
     }
+    */
 }

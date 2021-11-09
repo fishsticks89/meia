@@ -6,7 +6,7 @@ namespace meia {
          * A Chassis that you can set the target position of each side and get error on
          *  \param left_motors
          *      Vector of left side's motor ports, negative if reversed
-         * \param left_motors
+         *  \param left_motors
          *      Vector of right side's motor ports, negative if reversed
          *  \param wheel_diameter
          *      Remember that 4" wheels are actually 4.125"!
@@ -20,7 +20,7 @@ namespace meia {
          *      External drive ratio (MUST BE DECIMAL)
          *      eg. if your drive is 84:36 where the 36t is powered, your RATIO would be 2.333.
          *      eg. if your drive is 36:60 where the 60t is powered, your RATIO would be 0.6.
-        */
-        ChassisController::ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio);
+         */
+        // ChassisController::ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio);
     };
 }
