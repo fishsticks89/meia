@@ -12,7 +12,6 @@ void initialize() {
 	pros::lcd::initialize();
 	pros::lcd::set_text(0, "meia - A PROS library for creating reliable autons with beginners in mind, and Worlds on the horizon.");
 	// tasks go here
-
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
