@@ -1,39 +1,24 @@
 #include "main.h"
 namespace meia
 {
-  std::vector<int> left_motors;
-  std::vector<int> right_motors;
-  //! Constructor
-  Chassis::Chassis(std::vector<int> p_left_motors, std::vector<int> p_right_motors)
-  {
-    left_motors = p_left_motors;
-    right_motors = p_right_motors;
-  }
 
   //! Utility Functions
   bool is_reversed(int input)
   {
-    if (input < 0)
-      return true;
-    return false;
+    return (input < 0) ? true : false;
   }
 
   int sgn(int input)
   {
-    if (input > 0)
-      return 1;
-    else if (input < 0)
-      return -1;
-    return 0;
+    return (input > 0) ? 1 : -1;
   }
 
   double clip_num(double input, double max, double min)
   {
-    if (input > max)
-      return max;
-    else if (input < min)
-      return min;
-    return input;
+    if (min < input < max)
+      return input;
+    else
+      return (min >= max) ? max : min;
   }
 
   //! Motor Functions

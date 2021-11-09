@@ -1,12 +1,15 @@
 #include "main.h"
 namespace meia {
     class Chassis {
+        private:
+            std::vector<int> left_motors;
+            std::vector<int> right_motors;
         public:
             /**
              * A Chassis that you can set the voltage of each side to and get telemetry on
              * Parameters are vectors of each side's motor ports, negative if reversed
              */
-            Chassis(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports);
+            explicit Chassis(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports) : left_motors(left_motor_ports), right_motors(right_motor_ports) {};
             /**
              * Sets the chassis to voltage
              * \param input_l

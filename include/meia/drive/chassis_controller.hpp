@@ -1,6 +1,8 @@
 #include "main.h"
 namespace meia {
-    class ChassisController:private Chassis {
+    class ChassisController: private Chassis {
+    private:        
+        double ticks_per_inch;
     public:
         /**
          * A Chassis that you can set the target position of each side and get error on
@@ -21,6 +23,13 @@ namespace meia {
          *      eg. if your drive is 84:36 where the 36t is powered, your RATIO would be 2.333.
          *      eg. if your drive is 36:60 where the 60t is powered, your RATIO would be 0.6.
          */
-        // ChassisController::ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio);
+        explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio) : 
+        Chassis(left_motors, right_motors),
+        ticks_per_inch(
+            ((50*(3600/motor_rpm)) * gear_ratio) // Ticks per revolution
+                /
+            (wheel_diameter * M_PI) // Circumference of wheel
+        ) {};
+        using Chassis::tank_control;
     };
 }
