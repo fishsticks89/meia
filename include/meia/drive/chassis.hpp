@@ -2,6 +2,10 @@
 namespace meia {
     class Chassis {
         public:
+            /**
+             * A Chassis that you can set the voltage of each side to and get telemetry on
+             * Parameters are vectors of each side's motor ports, negative if reversed
+             */
             Chassis(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports);
             /**
              * Sets the chassis to voltage
@@ -15,6 +19,10 @@ namespace meia {
              * resets the motor encoders
              */
             void tare_motors();
+            /**
+             * gets the avg motor encoder value
+             */
+            std::pair<double, double> get_motor_positions();
             /**
              * Changes the way the drive behaves when it is not under active user control
              * \param input

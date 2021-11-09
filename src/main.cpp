@@ -1,5 +1,4 @@
 #include "main.h"
-extern meia::Chassis dogo;
 
 /**
  * A callback function for LLEMU's center button.
@@ -29,7 +28,6 @@ void initialize() {
 
 	pros::lcd::register_btn1_cb(on_center_button);
 	// tasks go here
-	meia::Chassis dogo({18,-19}, {16,-17});
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -77,7 +75,6 @@ void autonomous() {}
  */
 void opcontrol() {
 	pros::Controller main(pros::E_CONTROLLER_MASTER);
-	meia::Chassis dogo({18,-19}, {16,-17});
 	
 	while (true) {
 		dogo.tank_control(main, 2.7);
