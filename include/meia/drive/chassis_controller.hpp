@@ -19,7 +19,7 @@ namespace meia {
      *      If your drive is 84:36 where the 36t is powered, your RATIO would be 2.333.
      *      If your drive is 36:60 where the 60t is powered, your RATIO would be 0.6.
      */
-    class ChassisController: private Chassis, private pros::Task {
+    class ChassisController: private Chassis {
         private:        
             double ticks_per_inch;
             std::pair<double, double> set_voltage_normalized(double l_volt, double r_volt);
@@ -27,6 +27,7 @@ namespace meia {
                 Pid_task_messenger_struct(int p_drive_task_delay_factor) : drive_task_delay_factor{p_drive_task_delay_factor} {}
                 int drive_task_delay_factor = 1;
             };
+            pros::Task pid_loop_task;
             static void pid_loop(void* p);
         public:
             Pid_task_messenger_struct pid_task_messenger;
@@ -38,7 +39,7 @@ namespace meia {
                 (wheel_diameter * M_PI) // Circumference of wheel
             ),
             pid_task_messenger(delay_time),
-            pros::Task (pid_loop, &pid_task_messenger, "pid_task")
+            pid_loop_task(pid_loop, &pid_task_messenger, "pid_task")
             {};
             // uses tank control and get_temps function from meia::Chassis
             using Chassis::tank_control;
