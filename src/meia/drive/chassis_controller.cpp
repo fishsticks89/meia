@@ -1,8 +1,11 @@
 #include "main.h"
 namespace meia {
-    void logger() {
-        std::string d = "glubr";
-        printf(d.c_str());
+    void ChassisController::pid_loop(void* p) {
+        int delay_time = ((Pid_task_messenger_struct*)p)->drive_task_delay_factor;
+        std::string initmessage = "pid initiated";
+        printf(initmessage.c_str());
+        while (true) {
+            pros::delay(1000 * delay_time);
+        }
     }
-    pros::Task goobel(logger);
 }
