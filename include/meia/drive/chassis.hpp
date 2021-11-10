@@ -30,6 +30,10 @@ namespace meia {
              */
             std::pair<double, double> get_motor_positions();
             /**
+             * gets the temperature of each motor in the drive (left side first)
+             */
+            std::pair<std::vector<double>, std::vector<double>> get_motor_temps();
+            /**
              * Changes the way the drive behaves when it is not under active user control
              * \param input
              *        the 'brake mode' of the motor e.g. 'pros::E_MOTOR_BRAKE_COAST' 'pros::E_MOTOR_BRAKE_BRAKE' 'pros::E_MOTOR_BRAKE_HOLD'

@@ -39,7 +39,8 @@ namespace meia {
             pid_task_messenger{new Pid_task_messenger_struct(delay_time)},
             pros::Task (pid_loop, pid_task_messenger)
             {};
-            // uses tank control function from meta::Chassis
+            // uses tank control and get_temps function from meia::Chassis
             using Chassis::tank_control;
+            using Chassis::get_motor_temps;
     };
 }
