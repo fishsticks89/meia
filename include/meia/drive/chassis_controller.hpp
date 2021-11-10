@@ -23,13 +23,13 @@ namespace meia {
         private:        
             double ticks_per_inch;
             std::pair<double, double> set_voltage_normalized(double l_volt, double r_volt);
-            typedef struct Pid_task_messenger_struct {
+            struct Pid_task_messenger_struct {
                 Pid_task_messenger_struct(int p_drive_task_delay_factor) : drive_task_delay_factor{p_drive_task_delay_factor} {}
                 int drive_task_delay_factor = 1;
             };
             static void pid_loop(void* p);
-            int pid_task_messenger;
         public:
+            Pid_task_messenger_struct pid_task_messenger;
             explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, int delay_time = 1) : 
             Chassis(left_motors, right_motors),
             ticks_per_inch(

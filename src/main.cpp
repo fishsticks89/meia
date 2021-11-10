@@ -64,7 +64,7 @@ void opcontrol() {
 	pros::Controller main(pros::E_CONTROLLER_MASTER);
 	
 	while (true) {
-		dogo.pid_task_messenger = main.get_analog(ANALOG_LEFT_X);
+		dogo.pid_task_messenger.drive_task_delay_factor = main.get_analog(ANALOG_LEFT_X);
 		dogo.tank_control(main, 2.7);
 		pros::delay(100);
 	}
