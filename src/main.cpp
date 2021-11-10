@@ -8,9 +8,12 @@ meia::ChassisController dogo({18,-19}, {16,-17}, 4.125, 200, 2.333);
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::delay(200);
+	pros::delay(500);
 	pros::lcd::initialize();
-	pros::lcd::set_text(0, "meia - A PROS library for creating reliable autons with beginners in mind, and Worlds on the horizon.");
+	pros::lcd::set_text(0, "meia - A PROS library for");
+	pros::lcd::set_text(1, "creating reliable autons with");
+	pros::lcd::set_text(2, "beginners in mind, and Worlds");
+	pros::lcd::set_text(3, "on the horizon.");
 	// tasks go here
 }
 /**
@@ -61,6 +64,7 @@ void opcontrol() {
 	pros::Controller main(pros::E_CONTROLLER_MASTER);
 	
 	while (true) {
+		dogo.pid_task_messenger = main.get_analog(ANALOG_LEFT_X);
 		dogo.tank_control(main, 2.7);
 		pros::delay(100);
 	}

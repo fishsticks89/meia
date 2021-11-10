@@ -88,7 +88,7 @@ namespace meia
 
   double curve_function(int x, double scale)
   {
-    return (scale != 0 && x != 100) ? (powf(2.718, -(scale / 10)) + powf(2.718, (abs(x) - 127) / 10) * (1 - powf(2.718, -(scale / 10)))) * x : x * 1.27; // a ternerary to improve performance
+    return (scale != 0 && x != 100) ? (powf(2.718, -(scale / 10)) + powf(2.718, (abs(x) - 127) / 10) * (1 - powf(2.718, -(scale / 10)))) * x : x; // a ternerary to improve performance
   }
 
   // Tank control
