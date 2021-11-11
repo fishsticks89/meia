@@ -49,5 +49,6 @@ namespace meia {
              *         the minimum movement of the controller (out of 100) before the motors are moved
             */
             void tank_control(pros::Controller con, double curve_intensity = 0, int deadzone = 0);
+            bool joy_control = true; // set to true when the user is using joystick control
     };
 }
