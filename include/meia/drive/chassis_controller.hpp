@@ -38,7 +38,7 @@ namespace meia {
                 pros::Task* self_ptr; // used to suspend task during joystick control
                 bool* is_inactive; // same as above
                 int drive_task_delay_factor = 1;
-                void set_voltage();
+                void output(double, double);
             };
             pros::Task pid_loop_task;
             static void pid_loop(void* p);        
