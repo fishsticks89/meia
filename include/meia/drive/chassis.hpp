@@ -11,16 +11,16 @@ namespace meia {
         private:
             std::vector<int> left_motors;
             std::vector<int> right_motors;
+            static std::vector<int> *p_left_motors;
+            static std::vector<int> *p_right_motors;
         public:
             explicit Chassis(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports) : left_motors(left_motor_ports), right_motors(right_motor_ports) {};
             /**
              * Sets the chassis to voltage
-             * \param input_l
-             *        voltage for left side, -127 to 127
-             * \param input_r
-             *        voltage for right side, -127 to 127
+             * \param voltages
+             *        voltages for each side, left first, -127 to 127
             */
-            void set_voltage(int input_l, int input_r);
+            void set_voltage(std::pair<int, int> voltages);
             /**
              * resets the motor encoders
              */

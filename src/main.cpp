@@ -9,6 +9,7 @@ meia::ChassisController dogo({18,-19}, {16,-17}, 4.125, 200, 2.333);
  */
 void initialize() {
 	pros::delay(500);
+	dogo.tare(); // no reason, just yes
 	pros::lcd::initialize();
 	pros::lcd::set_text(0, "meia - A PROS library for");
 	pros::lcd::set_text(1, "creating reliable autons with");
@@ -21,7 +22,9 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	dogo.suspend();
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -45,7 +48,12 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	while (true) {
+		dogo.change_target(0.1, 0.1);
+		pros::delay(50);
+	}
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -64,7 +72,7 @@ void opcontrol() {
 	pros::Controller main(pros::E_CONTROLLER_MASTER);
 	
 	while (true) {
-		dogo.tank_control(main, 2.7);
+		dogo.tank_control(main, pros::E_MOTOR_BRAKE_COAST, 2.3);
 		pros::delay(100);
 	}
 }

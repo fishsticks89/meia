@@ -23,15 +23,15 @@ namespace meia
 
   //! Motor Functions
   void
-  Chassis::set_voltage(int l, int r)
+  Chassis::set_voltage(std::pair<int, int> voltages)
   {
     for (int i : left_motors)
     {
-      pros::c::motor_move_voltage(std::abs(i), sgn(i) * l * (12000.0 / 127.0));
+      pros::c::motor_move_voltage(std::abs(i), sgn(i) * voltages.first * (12000.0 / 127.0));
     }
     for (int i : right_motors)
     {
-      pros::c::motor_move_voltage(std::abs(i), sgn(i) * r * (12000.0 / 127.0));
+      pros::c::motor_move_voltage(std::abs(i), sgn(i) * voltages.second * (12000.0 / 127.0));
     }
   }
 
@@ -98,12 +98,12 @@ namespace meia
     // Threshold if joysticks don't come back to perfect 0
     if (std::abs(con.get_analog(ANALOG_LEFT_Y)) > deadzone || std::abs(con.get_analog(ANALOG_RIGHT_Y)) > deadzone)
     {
-      set_voltage(curve_function(con.get_analog(ANALOG_LEFT_Y), curve_intensity), curve_function(con.get_analog(ANALOG_RIGHT_Y), curve_intensity));
+      set_voltage({curve_function(con.get_analog(ANALOG_LEFT_Y), curve_intensity), curve_function(con.get_analog(ANALOG_RIGHT_Y), curve_intensity)});
     }
     // When joys are released, do nothing
     else
     {
-      set_voltage(0, 0);
+      set_voltage({0, 0});
     }
   }
 }
