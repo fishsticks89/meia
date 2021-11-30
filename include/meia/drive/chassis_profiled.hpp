@@ -27,60 +27,59 @@ namespace meia {
      *  \param delay_time
      *      The delay between executions of the pid controller
      */
-    class ChassisController {
+    class Drive {
     private:
-        struct Pid_task_messenger_struct {
+        struct Profiling_task_messenger_struct {
             /**
              * Struct used to pass messages to pid_task
              * \param chassis_ptr
-             *      a pointer to a chassis for the PID task to control
+             *      a pointer to a chassis for the Profiling task to control
              * \param drive_task_delay_factor
              *      how many milliseconds the drive waits
             */
-            Pid_task_messenger_struct(Chassis* chassis_ptr, double p, double i, double d, double ticks_per_inch, int drive_task_delay_factor) :
+            Profiling_task_messenger_struct(ChassisController* chassis_ptr, pros::Imu* imu, double p, double i, double d, double max_speed, int drive_task_delay_factor = 5) :
                 chassis_ptr{ chassis_ptr },
                 delta_time{ drive_task_delay_factor },
-                ticks_per_inch{ ticks_per_inch },
+                max_speed{ max_speed },
+                imu{imu},
                 p{ p }, i{ i }, d{ d } {}
-            Chassis* chassis_ptr; // a pointer to the chassis the task controls
+            ChassisController* chassis_ptr; // a pointer to the chassis the task controls
+            pros::Imu* imu; // the imu to use for course correction
             pros::Mutex mutex; // the mutex to hold while modifying data
             int delta_time;
-            double ticks_per_inch; // motor.get_position()/inch
+            double max_speed; // motor.get_position()/inch
             double p; // the Proportional gain of the pid controller
             double i; // Integral gain
             double d; // Derivative gain
             double total_error; // the total error experienced
-            double left_target = 0; // target in inches of the motor
-            double right_target = 0; // target in inches of the motor
+            double target = 0; // rotational target in degrees
             bool reset = false;
         };
-        Pid_task_messenger_struct pid_task_messenger; // an instance of the pid task messenger struct used to commuicate with the pid task
-        Chassis chassis; // the chassis the controller controls
-        pros::Task pid_loop_task; // the task that controlls the chassis
+        Profiling_task_messenger_struct profiling_task_messenger; // an instance of the pid task messenger struct used to commuicate with the pid task
+        ChassisController chassis; // the chassis the controller controls
+        pros::Task profile_loop_task; // the task that controlls the chassis
         static void pid_loop(void* p); // the function the task uses to control the chassis
         static std::pair<double, double> normalize(double l_volt, double r_volt, double max); // a function that scales drive voltages down to a maximum
         static std::pair<double, std::pair<double, double>> pid(double current, double target, double p, double i, double d, std::pair<double, double> prev, int delta_time);
     public:
-        explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, double p, double i, double d, int delay_time = 5) :
-            chassis(left_motors, right_motors),
-            pid_task_messenger(&chassis, p, i, d, (
-                // ticks per inch
-                ((50 * (3600 / motor_rpm))* gear_ratio) // Ticks per revolution
-                /
-                (wheel_diameter * M_PI) // Circumference of wheel
+        explicit Drive(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, double p, double i, double d, pros::Imu imu, double turn_p, double turn_i, double turn_d, int delay_time = 10) :
+            chassis(left_motors, right_motors, wheel_diameter, motor_rpm, gear_ratio, p, i, d, delay_time),
+            profiling_task_messenger(&chassis, &imu, turn_p, turn_i, turn_d, (
+                (motor_rpm * gear_ratio) * (wheel_diameter * M_PI) // max speed
                 ), delay_time),
-            pid_loop_task(pid_loop, &pid_task_messenger, "pid_task")
+            profile_loop_task(pid_loop, &profiling_task_messenger, "pid_task")
         {};
-        // a function to change the targets of the pid task
-        void change_target(double l, double r);
+        // a function to change the target angle of the pid task
+        void turn(double target);
         // a function to change the correctional constants on the controller for the drive
-        void set_pid_constants(double p, double i, double d);
+        void set_drive_pid_constants(double p, double i, double d);
+        // a function to change the correctional constants on the controller for the drive
+        void set_turn_pid_constants(double p, double i, double d);
         // a function to get the total error of the chassis
         double get_total_error();
         // expose functions from meia::Chassis
         void tank_control(pros::Controller con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity = 0, int deadzone = 0);
         std::pair<std::vector<double>, std::vector<double>> get_motor_temps();
-        void set_drive_brake(pros::motor_brake_mode_e_t input);
         void tare();
         void end();
     };

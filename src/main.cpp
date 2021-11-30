@@ -1,6 +1,6 @@
 #include "main.h"
-meia::ChassisController dogo({18,-19}, {16,-17}, 4.125, 200, 2.333);
-
+meia::ChassisController dogo({ 18,-19 }, { 16,-17 }, 4.125, 200, 2.333, 20, 0, 0);
+pros::Controller mainish(pros::E_CONTROLLER_MASTER);
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -23,7 +23,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-	dogo.suspend();
+	dogo.end();
 }
 
 /**
@@ -49,9 +49,30 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	while (true) {
-		dogo.change_target(0.1, 0.1);
-		pros::delay(50);
+	dogo.tare();
+	for (int i = 0; i < 7; i++)
+	{
+		// test pid
+		// dogo.set_pid_constants((i + 1), 0, 0);
+		// for (int suba = 0; suba < 100; suba++) {
+		// 	dogo.change_target(suba/-1000, suba/-1000);
+		// 	pros::delay(10);
+		// }
+		pros::delay(2000);
+		for (int subb = 0; subb < 200; subb++) {
+			dogo.change_target(0.1, 0.1);
+			pros::delay(10);
+		}
+		pros::delay(700);
+		printf(std::to_string(dogo.get_total_error()).c_str());
+		mainish.print(0, 0, (std::to_string(i) + ": " + std::to_string(std::round(dogo.get_total_error()))).c_str());
+		// return to beginning
+		dogo.set_pid_constants(5, 0, 0);
+		for (int subd = 0; subd < 200; subd++) {
+			dogo.change_target(-0.1, -0.1);
+			pros::delay(20);
+		}
+		pros::delay(700);
 	}
 }
 
@@ -69,10 +90,9 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	pros::Controller main(pros::E_CONTROLLER_MASTER);
-	
+	dogo.end();
 	while (true) {
-		dogo.tank_control(main, pros::E_MOTOR_BRAKE_COAST, 2.3);
-		pros::delay(100);
+		dogo.tank_control(mainish, pros::E_MOTOR_BRAKE_COAST, 3);
+		pros::delay(10);
 	}
 }

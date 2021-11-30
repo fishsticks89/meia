@@ -23,7 +23,7 @@ namespace meia
 
   //! Motor Functions
   void
-  Chassis::set_voltage(std::pair<int, int> voltages)
+    Chassis::set_voltage(std::pair<int, int> voltages)
   {
     for (int i : left_motors)
     {
@@ -37,7 +37,7 @@ namespace meia
 
   // Tare
   void
-  Chassis::tare_motors()
+    Chassis::tare_motors()
   {
     for (int i : left_motors)
     {
@@ -50,31 +50,31 @@ namespace meia
   }
 
   // get the ticks of each side
-  std::pair<double, double> 
-  Chassis::get_motor_positions()
+  std::pair<double, double>
+    Chassis::get_motor_positions()
   {
-    return {pros::c::motor_get_position(abs(left_motors[0])), pros::c::motor_get_position(abs(right_motors[0]))};
+    return { pros::c::motor_get_position(abs(left_motors[0])), pros::c::motor_get_position(abs(right_motors[0])) };
   }
 
   // get the temps of each motor starting with left side
   std::pair<std::vector<double>, std::vector<double>>
-  Chassis::get_motor_temps()
+    Chassis::get_motor_temps()
   {
     std::vector<double> l_temps;
     std::vector<double> r_temps;
-    for (auto i : left_motors){
+    for (auto i : left_motors) {
       l_temps.push_back(pros::c::motor_get_temperature(abs(i)));
     }
     for (auto i : right_motors) {
       r_temps.push_back(pros::c::motor_get_temperature(abs(i)));
     }
-    std::pair temps = {l_temps, r_temps};
+    std::pair temps = { l_temps, r_temps };
     return temps;
-  }  
+  }
 
   // Brake modes
   void
-  Chassis::set_drive_brake(pros::motor_brake_mode_e_t input)
+    Chassis::set_drive_brake(pros::motor_brake_mode_e_t input)
   {
     for (int i : left_motors)
     {
@@ -98,12 +98,12 @@ namespace meia
     // Threshold if joysticks don't come back to perfect 0
     if (std::abs(con.get_analog(ANALOG_LEFT_Y)) > deadzone || std::abs(con.get_analog(ANALOG_RIGHT_Y)) > deadzone)
     {
-      set_voltage({curve_function(con.get_analog(ANALOG_LEFT_Y), curve_intensity), curve_function(con.get_analog(ANALOG_RIGHT_Y), curve_intensity)});
+      set_voltage({ curve_function(con.get_analog(ANALOG_LEFT_Y), curve_intensity), curve_function(con.get_analog(ANALOG_RIGHT_Y), curve_intensity) });
     }
     // When joys are released, do nothing
     else
     {
-      set_voltage({0, 0});
+      set_voltage({ 0, 0 });
     }
   }
 }
