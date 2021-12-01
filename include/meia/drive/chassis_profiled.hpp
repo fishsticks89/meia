@@ -1,5 +1,6 @@
 #include "main.h"
 namespace meia {
+    enum class Axis { x = 0, y = 1, z = 2};
     /**
      * A Chassis that you can set the target position of each side and get error on
      *  \param left_motors

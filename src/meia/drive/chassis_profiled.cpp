@@ -8,10 +8,10 @@ namespace meia {
         chassis.tank_control(con, brake_mode, curve_intensity, deadzone);
         profiling_task_messenger.mutex.give();
     }
-    std::pair<std::vector<double>, std::vector<double>> ChassisController::get_motor_temps() {
-        pid_task_messenger.mutex.take(10000);        
+    std::pair<std::vector<double>, std::vector<double>> Drive::get_motor_temps() {
+        profiling_task_messenger.mutex.take(10000);        
         std::pair<std::vector<double>, std::vector<double>> temps = chassis.get_motor_temps();
-        pid_task_messenger.mutex.give();
+        profiling_task_messenger.mutex.give();
         return temps;
     }
     void ChassisController::set_drive_brake(pros::motor_brake_mode_e_t input) {
@@ -71,12 +71,11 @@ namespace meia {
         if (!(30 >= messaging.delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
 
-        struct pid_info_struct {
-            pid_info_struct();
+        struct profiling_info_struct {
+            profiling_info_struct() {};
             double imu_reading;
             std::pair<double, std::pair<double, double>> pid_held = { 0, {0, 0} };
             std::pair<double, double> change_target = {0, 0};
-            Chassis chassis;
         } info;
         while (true) {
             messaging.mutex.take(3000);

@@ -1,5 +1,5 @@
 #include "main.h"
-meia::ChassisController dogo({ 18,-19 }, { 16,-17 }, 4.125, 200, 2.333, 20, 0, 0);
+meia::ChassisController dogo({ 18,-19 }, { 16,-17 }, 4.125, 200, 2.333, 4, 2, 0);
 pros::Controller mainish(pros::E_CONTROLLER_MASTER);
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -37,18 +37,8 @@ void disabled() {
  */
 void competition_initialize() {}
 
-/**
- * Runs the user autonomous code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the autonomous
- * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes.
- *
- * If the robot is disabled or communications is lost, the autonomous task
- * will be stopped. Re-enabling the robot will restart the task, not re-start it
- * from where it left off.
- */
-void autonomous() {
+void bad() {
+	
 	dogo.tare();
 	for (int i = 0; i < 7; i++)
 	{
@@ -76,6 +66,28 @@ void autonomous() {
 	}
 }
 
+
+/**
+ * Runs the user autonomous code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the autonomous
+ * mode. Alternatively, this function may be called in initialize or opcontrol
+ * for non-competition testing purposes.
+ *
+ * If the robot is disabled or communications is lost, the autonomous task
+ * will be stopped. Re-enabling the robot will restart the task, not re-start it
+ * from where it left off.
+ */
+void autonomous() {
+	dogo.tare();
+	pros::delay(2000);
+	double fac = 1;
+	while (true) {
+		dogo.change_target(0.01 * fac, 0.03 * fac);
+		pros::delay(5);
+	}
+}
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -93,6 +105,6 @@ void opcontrol() {
 	dogo.end();
 	while (true) {
 		dogo.tank_control(mainish, pros::E_MOTOR_BRAKE_COAST, 3);
-		pros::delay(10);
+		pros::delay(5);
 	}
 }

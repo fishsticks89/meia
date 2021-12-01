@@ -56,7 +56,7 @@ namespace meia {
         return total_error;
     }
     //! The Task
-    static std::pair<double, double> normalize(double l_volt, double r_volt, double max) {
+    std::pair<double, double> ChassisController::normalize(double l_volt, double r_volt, double max) {
         double l_dif = (std::abs(l_volt) > max) ? std::abs(l_volt) - max : 0;
         double r_dif = (std::abs(r_volt) > max) ? std::abs(l_volt) - max : 0;
         // scale down the voltages similarly if one is over 127
@@ -90,18 +90,19 @@ namespace meia {
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
 
         struct pid_info_struct {
-            pid_info_struct();
-            std::pair<double, double> motor_positions;
+            pid_info_struct() {};
+            std::pair<double, double> motor_positions = { 0, 0 };
             std::pair<double, std::pair<double, double>> left_pid = { 0, {0, 0} };
             std::pair<double, std::pair<double, double>> right_pid = { 0, {0, 0} };
-            Chassis chassis;
         } pid_info;
         while (true) {
-            messaging.mutex.take(3000);
-            (*(Pid_task_messenger_struct*)p).total_error += std::abs(pid_info.left_pid.second.second + pid_info.right_pid.second.second) / (messaging.delta_time * 100000);
+		    printf(std::to_string(pid_info.left_pid.first).c_str());
+		    printf("\n");
+            (*(Pid_task_messenger_struct*)p).mutex.take(3000);
+            // (*(Pid_task_messenger_struct*)p).total_error += std::abs(pid_info.left_pid.second.second + pid_info.right_pid.second.second) / (messaging.delta_time * 100000);
             messaging = *(Pid_task_messenger_struct*)p;
             pid_info.motor_positions = (*messaging.chassis_ptr).get_motor_positions();
-            messaging.mutex.give();
+            (*(Pid_task_messenger_struct*)p).mutex.give();
             if (messaging.reset) {
                 messaging.mutex.take(2000);
                 pid_info.left_pid = { 0, {0, 0} };
@@ -111,8 +112,10 @@ namespace meia {
             }
             pid_info.left_pid = pid(pid_info.motor_positions.first, messaging.left_target * messaging.ticks_per_inch, messaging.p, 0, 0, pid_info.left_pid.second, messaging.delta_time);
             pid_info.right_pid = pid(pid_info.motor_positions.second, messaging.right_target * messaging.ticks_per_inch, messaging.p, 0, 0, pid_info.right_pid.second, messaging.delta_time);
-
-            pid_info.chassis.set_voltage(normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
+            
+            (*(Pid_task_messenger_struct*)p).mutex.take(3000);
+            (*messaging.chassis_ptr).set_voltage(normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
+            (*(Pid_task_messenger_struct*)p).mutex.give();
 
             pros::delay(messaging.delta_time);
         }
