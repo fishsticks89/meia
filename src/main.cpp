@@ -1,5 +1,5 @@
 #include "main.h"
-meia::ChassisController dogo({ 18,-19 }, { 16,-17 }, 4.125, 200, 2.333, 4, 2, 0);
+meia::ChassisController dogo({ 20,-17 }, { 19,-18 }, 4.125, 200, 2.333, 4, 2, 0);
 pros::Controller mainish(pros::E_CONTROLLER_MASTER);
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -83,7 +83,7 @@ void autonomous() {
 	pros::delay(2000);
 	double fac = 1;
 	while (true) {
-		dogo.change_target(0.01 * fac, 0.03 * fac);
+		dogo.change_target(0.01 * fac, 0.015 * fac);
 		pros::delay(5);
 	}
 }
