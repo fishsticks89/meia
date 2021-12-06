@@ -1,6 +1,21 @@
 #include "main.h"
-meia::ChassisController dogo({ 20,-17 }, { 19,-18 }, 4.125, 200, 2.333, 4, 2, 0);
-pros::Controller mainish(pros::E_CONTROLLER_MASTER);
+meia::Drive dogo(
+    // Driving
+    {18, -19},          // left motor ports
+    {16, -17},          // right motor ports
+    4.125,              // wheel diameter (inches)
+    200,                // motor rpm
+    2.333,              // gear ratio
+    meia::Pid(4, 2, 1), // Drive PID constants
+
+    // Turning
+    9,                  // IMU port
+    meia::Pid(1, 0, 0), // Turn PID Constants
+
+    // Options
+    5 // delay time
+);
+pros::Controller con(pros::E_CONTROLLER_MASTER);
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -8,14 +23,14 @@ pros::Controller mainish(pros::E_CONTROLLER_MASTER);
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::delay(500);
-	dogo.tare(); // no reason, just yes
-	pros::lcd::initialize();
-	pros::lcd::set_text(0, "meia - A PROS library for");
-	pros::lcd::set_text(1, "creating reliable autons with");
-	pros::lcd::set_text(2, "beginners in mind, and Worlds");
-	pros::lcd::set_text(3, "on the horizon.");
-	// tasks go here
+    pros::delay(500);
+    dogo.tare(); // no reason, just yes
+    pros::lcd::initialize();
+    pros::lcd::set_text(0, "meia - A PROS library for");
+    pros::lcd::set_text(1, "creating reliable autons with");
+    pros::lcd::set_text(2, "beginners in mind, and Worlds");
+    pros::lcd::set_text(3, "on the horizon.");
+    // tasks go here
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -23,7 +38,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-	dogo.end();
+    dogo.end();
 }
 
 /**
@@ -35,37 +50,8 @@ void disabled() {
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
-
-void bad() {
-	
-	dogo.tare();
-	for (int i = 0; i < 7; i++)
-	{
-		// test pid
-		// dogo.set_pid_constants((i + 1), 0, 0);
-		// for (int suba = 0; suba < 100; suba++) {
-		// 	dogo.change_target(suba/-1000, suba/-1000);
-		// 	pros::delay(10);
-		// }
-		pros::delay(2000);
-		for (int subb = 0; subb < 200; subb++) {
-			dogo.change_target(0.1, 0.1);
-			pros::delay(10);
-		}
-		pros::delay(700);
-		printf(std::to_string(dogo.get_total_error()).c_str());
-		mainish.print(0, 0, (std::to_string(i) + ": " + std::to_string(std::round(dogo.get_total_error()))).c_str());
-		// return to beginning
-		dogo.set_pid_constants(5, 0, 0);
-		for (int subd = 0; subd < 200; subd++) {
-			dogo.change_target(-0.1, -0.1);
-			pros::delay(20);
-		}
-		pros::delay(700);
-	}
+void competition_initialize() {
 }
-
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -79,13 +65,10 @@ void bad() {
  * from where it left off.
  */
 void autonomous() {
-	dogo.tare();
-	pros::delay(2000);
-	double fac = 1;
-	while (true) {
-		dogo.change_target(0.01 * fac, 0.015 * fac);
-		pros::delay(5);
-	}
+    pros::delay(200);
+    pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
+    dogo.turn(-90);
+    pros::delay(5000);
 }
 
 /**
@@ -102,9 +85,9 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	dogo.end();
-	while (true) {
-		dogo.tank_control(mainish, pros::E_MOTOR_BRAKE_COAST, 3);
-		pros::delay(5);
-	}
+    dogo.end();
+    while (true) {
+        dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
+        pros::delay(5);
+    }
 }

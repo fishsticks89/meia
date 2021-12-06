@@ -1,3 +1,5 @@
+#include "chassis_interface.hpp"
+#include "chassis_util.hpp"
 #include "chassis.hpp"
 #include "chassis_controller.hpp"
 #include "chassis_profiled.hpp"

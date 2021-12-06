@@ -24,7 +24,7 @@
       {
         "label": "PROS MAKE and UPLOAD",
         "type": "shell",
-        "command": "pros mu",
+        "command": "pros mu\ndate",
         "problemMatcher": [],
         "group": {
           "kind": "build",
