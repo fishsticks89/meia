@@ -18,8 +18,8 @@ namespace meia {
     }
     //! inherited from ChassisController
     void Drive::tank_control(pros::Controller con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity, int deadzone) {
-        profile_loop_task.suspend();
         profiling_task_messenger.mutex.take(10000);
+        profile_loop_task.suspend();
         profiling_task_messenger.chassis_ptr->tank_control(con, brake_mode, curve_intensity, deadzone);
         profiling_task_messenger.mutex.give();
     }
@@ -37,6 +37,7 @@ namespace meia {
         profiling_task_messenger.imu->tare();
         profiling_task_messenger.chassis_ptr->end();
         profiling_task_messenger.mutex.give();
+        printf("imu reset\n");
     }
 
     void Drive::end() {
@@ -85,9 +86,6 @@ namespace meia {
         if (!(30 >= messaging.delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
 
-        (*(Profiling_task_messenger_struct*)p).imu->reset();
-
-        printf("imu reset\n");
 
         struct profiling_info_struct {
                 profiling_info_struct(){};
@@ -97,9 +95,13 @@ namespace meia {
         } info;
 
         while (true) {
+            printf(util.dub_to_string(pros::millis()).c_str());
+            printf("\n");
             (*(Profiling_task_messenger_struct*)p).mutex.take(3000);
             (*(Profiling_task_messenger_struct*)p).total_error += std::abs(info.pid_held.second.second) / (messaging.delta_time * 100000);
             messaging = *(Profiling_task_messenger_struct*)p;
+            (*(Profiling_task_messenger_struct*)p).mutex.give();
+
 
             info.imu_reading = messaging.imu->get_euler().yaw;
 
@@ -118,16 +120,19 @@ namespace meia {
 
             // Turn Pid Stuff
 
-            info.pid_held = util.pid(info.imu_reading, messaging.target, messaging.p, messaging.i, messaging.d, info.pid_held.second, messaging.delta_time);
-            info.change_target = {info.pid_held.first / 1000, info.pid_held.first / -1000};
+            info.pid_held = {(info.imu_reading - messaging.target) * messaging.p, {0, 0}};
+            info.change_target = {info.pid_held.first / -10000, info.pid_held.first / 10000};
 
             // Output
 
             (*(Profiling_task_messenger_struct*)p).mutex.take(3000);
-            (*messaging.chassis_ptr).change_target(info.change_target.first, info.change_target.second);
+            messaging.chassis_ptr->change_target(info.change_target.first, info.change_target.second);
             (*(Profiling_task_messenger_struct*)p).mutex.give();
+
             pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(messaging.target));
-            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_held.first));
+            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_held.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
+            printf(util.dub_to_string(pros::millis()).c_str());
+            printf("\n\n");
             pros::delay(messaging.delta_time);
         }
     }

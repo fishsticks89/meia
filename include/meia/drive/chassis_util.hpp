@@ -24,6 +24,18 @@ namespace meia {
              *      see curve
              */
             static double get_curve_distance(double increment, double acceleration, double max, double antijerk_percent);
+            /**
+             * A function to get the iterations a curve will take to complete
+             * \param increment
+             *      deltatime, cannot be zero
+             * \param acceleration
+             *      this is measured in glazed donuts per bald eagle... I mean max delta_inches per increment
+             * \param max
+             *      see curve
+             * \param antijerk_percent
+             *      see curve
+             */
+            static double get_curve_iterations(double increment, double acceleration, double max, double antijerk_percent);
             // a function that returns the correction, along with info to be fed to it as prev. prev is a pair <error, integral>
             static std::pair<double, std::pair<double, double>> pid(double current, double target, double p, double i, double d, std::pair<double, double> prev, int delta_time);
             // -1 or 1 based on the sign of `input` (0 is 1)

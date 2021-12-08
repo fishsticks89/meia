@@ -26,17 +26,6 @@ namespace meia {
             return max;
         }
     }
-    /**
-     * A function to get the distance a curve will take to accelerate through
-     * \param increment
-     *      deltatime, cannot be zero
-     * \param acceleration
-     *      this is measured in glazed donuts per bald eagle... I mean max delta_inches per increment
-     * \param max
-     *      see curve
-     * \param antijerk_percent
-     *      see curve
-     */
     double util_funcs::get_curve_distance(double increment, double acceleration, double max, double antijerk_percent) {
         if (increment <= 0)
             throw "too small dumbass";
@@ -49,6 +38,20 @@ namespace meia {
         }
         return total;
     }
+
+    double util_funcs::get_curve_iterations(double increment, double acceleration, double max, double antijerk_percent) {
+        if (increment <= 0)
+            throw "too small dumbass";
+        double total = 0;
+        double i = increment;
+        while (curve(i, max / acceleration, antijerk_percent) * acceleration < max) {
+            total += curve(i, max, antijerk_percent);
+            i += increment;
+            std::cout << total << std::endl;
+        }
+        return i / increment;
+    }
+
     std::pair<double, std::pair<double, double>> util_funcs::pid(double current, double target, double p, double i, double d, std::pair<double, double> prev, int delta_time) {
         // p constant is translated into correction
         double p_correct = target - current;

@@ -56,7 +56,6 @@ namespace meia {
         return total_error;
     }
     //! The Task
-
     void ChassisController::pid_loop(void* p) {
         pros::delay(200);
         (*(Pid_task_messenger_struct*)p).mutex.take(2000);                    // holds the pid task messenger struct mutex so pid task messenger struct can be red in

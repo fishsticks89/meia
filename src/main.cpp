@@ -6,8 +6,8 @@ meia::Drive dogo(
     4.125,              // wheel diameter (inches)
     200,                // motor rpm
     2.333,              // gear ratio
-    meia::Pid(4, 2, 1), // Drive PID constants
-
+    meia::Pid(15, 0.5, 0), // Drive PID constants
+    
     // Turning
     9,                  // IMU port
     meia::Pid(1, 0, 0), // Turn PID Constants
@@ -24,7 +24,7 @@ pros::Controller con(pros::E_CONTROLLER_MASTER);
  */
 void initialize() {
     pros::delay(500);
-    dogo.tare(); // no reason, just yes
+    // dogo.tare(); // no reason, just yes
     pros::lcd::initialize();
     pros::lcd::set_text(0, "meia - A PROS library for");
     pros::lcd::set_text(1, "creating reliable autons with");
@@ -38,7 +38,6 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-    dogo.end();
 }
 
 /**
@@ -65,10 +64,11 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+    dogo.tare();
     pros::delay(200);
     pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
     dogo.turn(-90);
-    pros::delay(5000);
+    pros::delay(50000);
 }
 
 /**
@@ -85,7 +85,6 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-    dogo.end();
     while (true) {
         dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
         pros::delay(5);

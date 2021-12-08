@@ -35,8 +35,8 @@ namespace meia {
                 public:
                     MovementInfo(Curve start_curve, Curve end_curve, double max_speed, double distance, bool type)
                         : start(start_curve), end(end_curve), max_speed(max_speed), distance(distance), type(type) {
-                        start_curve_end = util.get_curve_distance(*delay_time_ptr, ((start_curve.acceleration) / (1000 / *delay_time_ptr)) * (max_speed / start_curve.endpoint_speed), max_speed, start_curve.antijerk_percent);
-                        start_curve_end = distance - util.get_curve_distance(*delay_time_ptr, ((start_curve.acceleration) / (1000 / *delay_time_ptr)) * (max_speed / start_curve.endpoint_speed), max_speed, start_curve.antijerk_percent);
+                        start_curve_end = util.get_curve_distance(*delay_time_ptr, ((start_curve.acceleration) / (1000 / *delay_time_ptr)) * (max_speed / (max_speed - start_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) + ((start_curve.endpoint_speed != 0) ? util.get_curve_iterations(*delay_time_ptr, ((start_curve.acceleration) / (1000 / *delay_time_ptr)) * (max_speed / (max_speed - start_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) : 0);
+                        end_curve_start = distance - util.get_curve_distance(*delay_time_ptr, ((end_curve.acceleration) / (1000 / *delay_time_ptr)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) + ((end_curve.endpoint_speed != 0) ? util.get_curve_iterations(*delay_time_ptr, ((end_curve.acceleration) / (1000 / *delay_time_ptr)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) * end_curve.endpoint_speed : 0);
                     };
                     bool type;
                     double max_speed;

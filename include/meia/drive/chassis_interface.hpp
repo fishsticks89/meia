@@ -29,4 +29,15 @@ namespace meia {
             double acceleration;
             double antijerk_percent;
     };
+    class MoventTelemetry {
+        private:
+            double total_move;
+            double* amount_completed;
+            pros::Mutex* mutex;
+
+        public:
+            MoventTelemetry(double total_move, double* amount_completed, pros::Mutex* completed)
+                : total_move(total_move), amount_completed(amount_completed), mutex(mutex){};
+            
+    };
 } // namespace meia
