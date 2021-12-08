@@ -58,12 +58,12 @@ namespace meia {
     //! The Task
     void ChassisController::pid_loop(void* p) {
         pros::delay(200);
-        (*(Pid_task_messenger_struct*)p).mutex.take(2000);                    // holds the pid task messenger struct mutex so pid task messenger struct can be red in
-        Pid_task_messenger_struct messaging = *(Pid_task_messenger_struct*)p; // reads in pid task messenger struct
-        (*(Pid_task_messenger_struct*)p).mutex.give();                        // returns the mutex
-        if (!(30 >= messaging.delta_time <= 5))                               // throws an error if people ask for over 30 millis of delay time
+        (*(Pid_task_messenger_struct*)p).mutex.take(2000); // holds the pid task messenger struct mutex so pid task messenger struct can be red in
+        auto io = static_cast<Pid_task_messenger_struct*>(p);
+        Pid_task_messenger_struct io_hold = *io;
+        if (!(30 >= io->delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
-
+        (*(Pid_task_messenger_struct*)p).mutex.give(); // returns the mutex
         struct pid_info_struct {
                 pid_info_struct(){};
                 std::pair<double, double> motor_positions = {0, 0};
@@ -71,27 +71,24 @@ namespace meia {
                 std::pair<double, std::pair<double, double>> right_pid = {0, {0, 0}};
         } pid_info;
         while (true) {
-            (*(Pid_task_messenger_struct*)p).mutex.take(3000);
+            io->mutex.take(3000);
             // log error for total error sampling for tuning
-            (*(Pid_task_messenger_struct*)p).total_error += std::abs(pid_info.left_pid.second.second + pid_info.right_pid.second.second) / (messaging.delta_time * 100000);
-            messaging = *(Pid_task_messenger_struct*)p;
-            pid_info.motor_positions = (*messaging.chassis_ptr).get_motor_positions();
-            (*(Pid_task_messenger_struct*)p).mutex.give();
-            if (messaging.reset) {
-                messaging.mutex.take(2000);
+            io->total_error += std::abs(pid_info.left_pid.second.second + pid_info.right_pid.second.second) / (io->delta_time * 100000);
+            pid_info.motor_positions = io->chassis_ptr->get_motor_positions();
+            if (io->reset) {
                 pid_info.left_pid = {0, {0, 0}};
                 pid_info.right_pid = {0, {0, 0}};
-                (*(Pid_task_messenger_struct*)p).reset = false;
-                messaging.mutex.give();
+                io->reset = false;
             }
-            pid_info.left_pid = util.pid(pid_info.motor_positions.first, messaging.left_target * messaging.ticks_per_inch, messaging.p, messaging.i, messaging.d, pid_info.left_pid.second, messaging.delta_time);
-            pid_info.right_pid = util.pid(pid_info.motor_positions.second, messaging.right_target * messaging.ticks_per_inch, messaging.p, messaging.i, messaging.d, pid_info.right_pid.second, messaging.delta_time);
+            io->mutex.give();
+            pid_info.left_pid = util.pid(pid_info.motor_positions.first, io_hold.left_target * io_hold.ticks_per_inch, io_hold.p, io_hold.i, io_hold.d, pid_info.left_pid.second, io_hold.delta_time);
+            pid_info.right_pid = util.pid(pid_info.motor_positions.second, io_hold.right_target * io_hold.ticks_per_inch, io_hold.p, io_hold.i, io_hold.d, pid_info.right_pid.second, io_hold.delta_time);
 
-            (*(Pid_task_messenger_struct*)p).mutex.take(3000);
-            (*messaging.chassis_ptr).set_voltage(util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
-            (*(Pid_task_messenger_struct*)p).mutex.give();
+            io->mutex.take(3000);
+            io->chassis_ptr->set_voltage(util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
+            io->mutex.give();
 
-            pros::delay(messaging.delta_time);
+            pros::delay(io_hold.delta_time);
         }
     }
 } // namespace meia

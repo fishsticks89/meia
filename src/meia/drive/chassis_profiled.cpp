@@ -79,13 +79,13 @@ namespace meia {
     void Drive::pid_loop(void* p) {
         pros::delay(200);
 
-        (*(Profiling_task_messenger_struct*)p).mutex.take(2000);                          // holds the pid task messenger struct mutex so pid task messenger struct can be red in
-        Profiling_task_messenger_struct messaging = *(Profiling_task_messenger_struct*)p; // reads in pid task messenger struct
-        (*(Profiling_task_messenger_struct*)p).mutex.give();                              // returns the mutex
+        (*(Profiling_task_messenger_struct*)p).mutex.take(2000); // holds the pid task messenger struct mutex so pid task messenger struct can be red in
+        auto io = static_cast<Profiling_task_messenger_struct*>(p);
+        Profiling_task_messenger_struct io_hold = *io;
+        (*(Profiling_task_messenger_struct*)p).mutex.give(); // returns the mutex
 
-        if (!(30 >= messaging.delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
+        if (!(30 >= io_hold.delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
-
 
         struct profiling_info_struct {
                 profiling_info_struct(){};
@@ -97,19 +97,17 @@ namespace meia {
         while (true) {
             printf(util.dub_to_string(pros::millis()).c_str());
             printf("\n");
-            (*(Profiling_task_messenger_struct*)p).mutex.take(3000);
-            (*(Profiling_task_messenger_struct*)p).total_error += std::abs(info.pid_held.second.second) / (messaging.delta_time * 100000);
-            messaging = *(Profiling_task_messenger_struct*)p;
-            (*(Profiling_task_messenger_struct*)p).mutex.give();
+            io->mutex.take(3000);
+            io->total_error += std::abs(info.pid_held.second.second) / (io_hold.delta_time * 100000);
+            io->mutex.give();
 
+            info.imu_reading = io_hold.imu->get_euler().yaw;
 
-            info.imu_reading = messaging.imu->get_euler().yaw;
-
-            if (messaging.reset) {
-                (*(Profiling_task_messenger_struct*)p).mutex.take(3000);
+            if (io_hold.reset) {
+                io->mutex.take(3000);
                 info.pid_held = {0, {0, 0}};
-                (*(Profiling_task_messenger_struct*)p).reset = false;
-                (*(Profiling_task_messenger_struct*)p).mutex.give();
+                io->reset = false;
+                io->mutex.give();
             }
 
             //! Motion Profiling Stuff
@@ -120,20 +118,20 @@ namespace meia {
 
             // Turn Pid Stuff
 
-            info.pid_held = {(info.imu_reading - messaging.target) * messaging.p, {0, 0}};
+            info.pid_held = {(info.imu_reading - io_hold.target) * io_hold.p, {0, 0}};
             info.change_target = {info.pid_held.first / -10000, info.pid_held.first / 10000};
 
             // Output
 
-            (*(Profiling_task_messenger_struct*)p).mutex.take(3000);
-            messaging.chassis_ptr->change_target(info.change_target.first, info.change_target.second);
-            (*(Profiling_task_messenger_struct*)p).mutex.give();
+            io->mutex.take(3000);
+            io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
+            io->mutex.give();
 
-            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(messaging.target));
+            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(io_hold.target));
             pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_held.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
             printf(util.dub_to_string(pros::millis()).c_str());
             printf("\n\n");
-            pros::delay(messaging.delta_time);
+            pros::delay(io_hold.delta_time);
         }
     }
 } // namespace meia
