@@ -23,21 +23,24 @@ namespace meia {
      */
     class Curve {
         public:
-            Curve(double acceleration, double endpoint_speed = 0, double antijerk_percent = 0)
+            Curve(double acceleration = 0, double endpoint_speed = 0, double antijerk_percent = 0)
                 : endpoint_speed(endpoint_speed), acceleration(acceleration), antijerk_percent(antijerk_percent){};
             double endpoint_speed;
             double acceleration;
             double antijerk_percent;
     };
-    class MoventTelemetry {
+    class MovementTelemetry {
         private:
             double total_move;
             double* amount_completed;
             pros::Mutex* mutex;
+            int id;
+            int* current_id;
 
         public:
-            MoventTelemetry(double total_move, double* amount_completed, pros::Mutex* completed)
-                : total_move(total_move), amount_completed(amount_completed), mutex(mutex){};
+            MovementTelemetry(double total_move = 0, double* amount_completed = nullptr, int* current_id = nullptr, pros::Mutex* completed = nullptr, int id = -1)
+                : total_move(total_move), amount_completed(amount_completed), mutex(mutex), id(id), current_id(current_id) {};
+            void wait_until(double val);
             
     };
 } // namespace meia

@@ -1,5 +1,9 @@
 #include "main.h"
 namespace meia {
+    template <typename T, typename U>
+    std::pair<T, U> operator+(const std::pair<T, U>& l, const std::pair<T, U>& r) {
+        return {l.first + r.first, l.second + r.second};
+    }
     //! Util Funcs
     /**
      * a function to get how far a turn needs to be
@@ -29,19 +33,21 @@ namespace meia {
         profiling_task_messenger.mutex.give();
         return temps;
     }
-    void Drive::tare() {
+    void Drive::end() {
         profiling_task_messenger.mutex.take(10000);
         profile_loop_task.suspend();
         profiling_task_messenger.total_error = 0;
         profiling_task_messenger.reset = true;
-        profiling_task_messenger.imu->tare();
         profiling_task_messenger.chassis_ptr->end();
         profiling_task_messenger.mutex.give();
-        printf("imu reset\n");
     }
 
-    void Drive::end() {
-        tare();
+    void Drive::tare() {
+        end();
+        profiling_task_messenger.mutex.take(10000);
+        profiling_task_messenger.imu->tare();
+        profiling_task_messenger.mutex.give();
+        printf("imu reset\n");
     }
     void Drive::set_drive_pid_constants(double p, double i, double d) {
         profiling_task_messenger.mutex.take(1000);
@@ -69,12 +75,32 @@ namespace meia {
         profiling_task_messenger.mutex.give();
         return total_error;
     }
-    void Drive::turn(double target_deg) {
-        profiling_task_messenger.mutex.take(10000);
-        profiling_task_messenger.target = target_deg;
+
+    MovementTelemetry Drive::move(move_type_e type, double distance, double max_speed, Curve start, Curve end) {
+        bool break_allowed = false;
+        while (!break_allowed) {
+            profiling_task_messenger.mutex.take(3000);
+            break_allowed = profiling_task_messenger.next.type == none;
+            profiling_task_messenger.mutex.give();
+            if (!break_allowed)
+                pros::delay(10);
+        }
+        profiling_task_messenger.mutex.take(3000);
+        int id = pros::millis();
+        profiling_task_messenger.next = MovementInfo(start, end, max_speed, distance, type, id, delay_time);
         profiling_task_messenger.mutex.give();
-        profile_loop_task.resume();
+        // waits for movement to begin
+        break_allowed = false;
+        while (!break_allowed) {
+            profiling_task_messenger.mutex.take(3000);
+            break_allowed = profiling_task_messenger.current.id == id;
+            profiling_task_messenger.mutex.give();
+            if (!break_allowed)
+                pros::delay(10);
+        }
+        return MovementTelemetry(distance, /*something in messenger*/ nullptr, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
     }
+
     //! The Task
     void Drive::pid_loop(void* p) {
         pros::delay(200);
@@ -90,45 +116,62 @@ namespace meia {
         struct profiling_info_struct {
                 profiling_info_struct(){};
                 double imu_reading;
-                std::pair<double, std::pair<double, double>> pid_held = {0, {0, 0}};
+                double error;
+                std::pair<double, std::pair<double, double>> pid_hold = {0, {0, 0}};
                 std::pair<double, double> change_target = {0, 0};
+                double target = 0;  // rotational target for turn pid in degrees
+                MovementInfo move;
         } info;
 
         while (true) {
             printf(util.dub_to_string(pros::millis()).c_str());
             printf("\n");
             io->mutex.take(3000);
-            io->total_error += std::abs(info.pid_held.second.second) / (io_hold.delta_time * 100000);
+            // reset logic
+            if (io->reset) {
+                // resets pid
+                info.pid_hold = {0, {0, 0}};
+                // resets profiling
+                io->resetMove();
+                io->current = MovementInfo();
+                io->next = MovementInfo();
+                io->reset = false;
+            }
+            // new move logic
+            if (std::abs(io->amount_completed) > std::abs(io->current.distance))
+                io->current = io->next;
+            io->next = MovementInfo();
+            io_hold = *io;
             io->mutex.give();
 
-            info.imu_reading = io_hold.imu->get_euler().yaw;
-
-            if (io_hold.reset) {
-                io->mutex.take(3000);
-                info.pid_held = {0, {0, 0}};
-                io->reset = false;
-                io->mutex.give();
-            }
+            info.change_target = {0, 0}; // resets the amount the robot must move
+            //* No mutex is held during IMU operation; all IMU references are unsafe unless task is disabled
+            info.imu_reading = io_hold.imu->get_euler().yaw; // reads in global z axis from imu
 
             //! Motion Profiling Stuff
 
-            info.change_target = {0, 0};
+            if (io_hold.current.type == drive)
+                info.change_target = info.change_target + std::make_pair(io_hold.current.distance, io_hold.current.distance);
+            if (io_hold.current.type == turn)
+                info.target += io_hold.current.distance;
 
             // Todo: curve stuff
 
-            // Turn Pid Stuff
+            //! Turn Pid Stuff
+            info.error = (std::abs(util.get_dist(true, info.imu_reading, info.target)) < std::abs(util.get_dist(false, info.imu_reading, info.target)) ? util.get_dist(true, info.imu_reading, info.target) : util.get_dist(false, info.imu_reading, info.target));
 
-            info.pid_held = {(info.imu_reading - io_hold.target) * io_hold.p, {0, 0}};
-            info.change_target = {info.pid_held.first / -10000, info.pid_held.first / 10000};
+            info.pid_hold = util.pid(0, info.error, io_hold.p, io_hold.i, io_hold.d, info.pid_hold.second, io_hold.delta_time);
+            info.change_target = {info.pid_hold.first / -10000, info.pid_hold.first / 10000};
 
-            // Output
+            //! Output
 
             io->mutex.take(3000);
             io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
+            io->total_error += std::abs(info.pid_hold.second.second) / (io_hold.delta_time * 100000);
             io->mutex.give();
 
-            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(io_hold.target));
-            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_held.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
+            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(info.target));
+            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_hold.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
             printf(util.dub_to_string(pros::millis()).c_str());
             printf("\n\n");
             pros::delay(io_hold.delta_time);

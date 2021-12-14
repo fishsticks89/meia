@@ -3,6 +3,16 @@ namespace meia {
     class util_funcs {
         public:
             /**
+             * Gets the distance around a 360 degree space (180 in each direction) one must turn to reach their target given a direction
+             *  \param left
+             *      direction, true if left
+             *  \param current
+             *  the angle to turn from
+             *  \param target
+             *      the angle to turn to
+             */
+            static double get_dist(bool left, double current, double target);
+            /**
              * A curve intended to smoothly accelerate a robot to a max speed without infinite jerk
              * \param sample
              *      the point on the curve to get the velocity for, usually measured in milliseconds, or school shootings if you are american

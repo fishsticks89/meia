@@ -1,13 +1,13 @@
 #include "main.h"
 meia::Drive dogo(
     // Driving
-    {18, -19},          // left motor ports
-    {16, -17},          // right motor ports
-    4.125,              // wheel diameter (inches)
-    200,                // motor rpm
-    2.333,              // gear ratio
+    {18, -19},             // left motor ports
+    {16, -17},             // right motor ports
+    4.125,                 // wheel diameter (inches)
+    200,                   // motor rpm
+    2.333,                 // gear ratio
     meia::Pid(15, 0.5, 0), // Drive PID constants
-    
+
     // Turning
     9,                  // IMU port
     meia::Pid(1, 0, 0), // Turn PID Constants
@@ -24,7 +24,7 @@ pros::Controller con(pros::E_CONTROLLER_MASTER);
  */
 void initialize() {
     pros::delay(500);
-    // dogo.tare(); // no reason, just yes
+    dogo.tare(); // resets imu
     pros::lcd::initialize();
     pros::lcd::set_text(0, "meia - A PROS library for");
     pros::lcd::set_text(1, "creating reliable autons with");
@@ -64,21 +64,28 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-    dogo.tare();
     pros::delay(200);
     pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
-    dogo.turn(-90);
+    dogo.move(
+        meia::drive, // the action to take (turn/drive)
+        100,         // the total distance to go(100 in)
+        1,           // The speed to go at max (1 inch per second)
+        meia::Curve( // accel curve
+            1,       // max acceleration (in/sec^2 ; zero if no curve)
+            0,       // the speed to accelerate from (0 in/sec)
+            15       // anti-jerk percent, the percent of the curve that is rounded
+            ),
+        meia::Curve( // decel curve
+            1,       // max deceleration in in/sec^2
+            0.5,     // the speed to decelerate to (0.5 in/sec)
+            15       // anti-jerk percent, the percent of the curve that is rounded
+            ));
     pros::delay(50000);
 }
 
 /**
- * Runs the operator control code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the operator
- * control mode.
- *
  * If no competition control is connected, this function will run immediately
- * following initialize().
+ * following initialize(), otherwise it will run after opcontrol is enabled on the field switch.
  *
  * If the robot is disabled or communications is lost, the
  * operator control task will be stopped. Re-enabling the robot will restart the

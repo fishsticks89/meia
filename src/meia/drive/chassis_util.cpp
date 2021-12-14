@@ -91,4 +91,14 @@ namespace meia {
         return (tokenize(std::to_string(d), "."));
     }
 
+    double util_funcs::get_dist(bool left, double current, double target) {
+        if (target < current)
+            return target - current;
+        else if (left)
+            return ((target - current) - 360);
+        else if (!left)
+            return (360 + (target - current));
+        throw "internalerr";
+    }
+
 } // namespace meia
