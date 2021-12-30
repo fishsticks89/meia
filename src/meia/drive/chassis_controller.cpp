@@ -55,9 +55,9 @@ namespace meia {
         pid_task_messenger.mutex.give();
         return total_error;
     }
+
     //! The Task
     void ChassisController::pid_loop(void* p) {
-        pros::delay(200);
         (*(Pid_task_messenger_struct*)p).mutex.take(2000); // holds the pid task messenger struct mutex so pid task messenger struct can be red in
         auto io = static_cast<Pid_task_messenger_struct*>(p);
         Pid_task_messenger_struct io_hold = *io;
@@ -72,6 +72,8 @@ namespace meia {
         } pid_info;
         while (true) {
             io->mutex.take(3000);
+            // cache io
+            io_hold = *io;
             // log error for total error sampling for tuning
             io->total_error += std::abs(pid_info.left_pid.second.second + pid_info.right_pid.second.second) / (io->delta_time * 100000);
             pid_info.motor_positions = io->chassis_ptr->get_motor_positions();
@@ -85,6 +87,10 @@ namespace meia {
             pid_info.right_pid = util.pid(pid_info.motor_positions.second, io_hold.right_target * io_hold.ticks_per_inch, io_hold.p, io_hold.i, io_hold.d, pid_info.right_pid.second, io_hold.delta_time);
 
             io->mutex.take(3000);
+            std::cout << "targeet: " << io->left_target << std::endl;
+            std::cout << "targeet: " << io_hold.left_target << std::endl;
+            // std::cout << "current_pos: " << util.dub_to_string(pid_info.motor_positions.first * 1000) << std::endl;
+            std::cout << "voltiage: " << pid_info.left_pid.first << std::endl;
             io->chassis_ptr->set_voltage(util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
             io->mutex.give();
 

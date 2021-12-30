@@ -1,8 +1,7 @@
 #include "main.h"
 namespace meia {
-    template <typename T, typename U>
-    std::pair<T, U> operator+(const std::pair<T, U>& l, const std::pair<T, U>& r) {
-        return {l.first + r.first, l.second + r.second};
+    std::pair<double, double> add_pair(std::pair<double, double> a, std::pair<double, double> b) {
+        return {a.first + b.first, a.second + b.second};
     }
     //! Util Funcs
     /**
@@ -36,6 +35,8 @@ namespace meia {
     void Drive::end() {
         profiling_task_messenger.mutex.take(10000);
         profile_loop_task.suspend();
+        profiling_task_messenger.current = MovementInfo();
+        profiling_task_messenger.next = MovementInfo();
         profiling_task_messenger.total_error = 0;
         profiling_task_messenger.reset = true;
         profiling_task_messenger.chassis_ptr->end();
@@ -47,7 +48,6 @@ namespace meia {
         profiling_task_messenger.mutex.take(10000);
         profiling_task_messenger.imu->tare();
         profiling_task_messenger.mutex.give();
-        printf("imu reset\n");
     }
     void Drive::set_drive_pid_constants(double p, double i, double d) {
         profiling_task_messenger.mutex.take(1000);
@@ -77,27 +77,35 @@ namespace meia {
     }
 
     MovementTelemetry Drive::move(move_type_e type, double distance, double max_speed, Curve start, Curve end) {
+        profile_loop_task.resume();
         bool break_allowed = false;
         while (!break_allowed) {
             profiling_task_messenger.mutex.take(3000);
             break_allowed = profiling_task_messenger.next.type == none;
             profiling_task_messenger.mutex.give();
+            std::cout << "waiting for allowed" << std::endl;
             if (!break_allowed)
                 pros::delay(10);
         }
         profiling_task_messenger.mutex.take(3000);
         int id = pros::millis();
+        std::cout << "injecting >> " << id << std::endl;
         profiling_task_messenger.next = MovementInfo(start, end, max_speed, distance, type, id, delay_time);
         profiling_task_messenger.mutex.give();
         // waits for movement to begin
         break_allowed = false;
         while (!break_allowed) {
+        std::cout << "awiatign begin >> " << id << std::endl;
             profiling_task_messenger.mutex.take(3000);
             break_allowed = profiling_task_messenger.current.id == id;
+            std::cout << "current >> " << profiling_task_messenger.current.id << std::endl;
             profiling_task_messenger.mutex.give();
             if (!break_allowed)
                 pros::delay(10);
         }
+        std::cout << "dun" << std::endl;
+        std::cout << profiling_task_messenger.current.id << std::endl;
+
         return MovementTelemetry(distance, /*something in messenger*/ nullptr, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
     }
 
@@ -119,13 +127,11 @@ namespace meia {
                 double error;
                 std::pair<double, std::pair<double, double>> pid_hold = {0, {0, 0}};
                 std::pair<double, double> change_target = {0, 0};
-                double target = 0;  // rotational target for turn pid in degrees
+                double target = 0; // rotational target for turn pid in degrees
                 MovementInfo move;
         } info;
 
         while (true) {
-            printf(util.dub_to_string(pros::millis()).c_str());
-            printf("\n");
             io->mutex.take(3000);
             // reset logic
             if (io->reset) {
@@ -133,14 +139,15 @@ namespace meia {
                 info.pid_hold = {0, {0, 0}};
                 // resets profiling
                 io->resetMove();
-                io->current = MovementInfo();
-                io->next = MovementInfo();
                 io->reset = false;
             }
             // new move logic
-            if (std::abs(io->amount_completed) > std::abs(io->current.distance))
+            if (std::abs(io->amount_completed) >= std::abs(io->current.distance))
                 io->current = io->next;
-            io->next = MovementInfo();
+                io->next = MovementInfo();
+            std::cout << "current: " << io->current.distance << std::endl;
+            std::cout << "completed: " << io->amount_completed << std::endl;
+            // cache messenger
             io_hold = *io;
             io->mutex.give();
 
@@ -151,29 +158,27 @@ namespace meia {
             //! Motion Profiling Stuff
 
             if (io_hold.current.type == drive)
-                info.change_target = info.change_target + std::make_pair(io_hold.current.distance, io_hold.current.distance);
-            if (io_hold.current.type == turn)
-                info.target += io_hold.current.distance;
-
+                info.change_target = add_pair(info.change_target, {io_hold.current.distance, io_hold.current.distance});
+            // if (io_hold.current.type == turn)
+            //     info.target += io_hold.current.distance;
+            
             // Todo: curve stuff
 
             //! Turn Pid Stuff
             info.error = (std::abs(util.get_dist(true, info.imu_reading, info.target)) < std::abs(util.get_dist(false, info.imu_reading, info.target)) ? util.get_dist(true, info.imu_reading, info.target) : util.get_dist(false, info.imu_reading, info.target));
-
             info.pid_hold = util.pid(0, info.error, io_hold.p, io_hold.i, io_hold.d, info.pid_hold.second, io_hold.delta_time);
-            info.change_target = {info.pid_hold.first / -10000, info.pid_hold.first / 10000};
+            // info.change_target = {info.pid_hold.first / -10000, info.pid_hold.first / 10000};
 
             //! Output
 
             io->mutex.take(3000);
+            std::cout << "delta target: " << info.change_target.first << std::endl;
             io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
             io->total_error += std::abs(info.pid_hold.second.second) / (io_hold.delta_time * 100000);
             io->mutex.give();
 
             pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(info.target));
             pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_hold.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
-            printf(util.dub_to_string(pros::millis()).c_str());
-            printf("\n\n");
             pros::delay(io_hold.delta_time);
         }
     }

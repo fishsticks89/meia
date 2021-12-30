@@ -1,12 +1,12 @@
 #include "main.h"
 meia::Drive dogo(
     // Driving
-    {18, -19},             // left motor ports
-    {16, -17},             // right motor ports
+    {20, -17},             // left motor ports
+    {-19, 18},             // right motor ports
     4.125,                 // wheel diameter (inches)
     200,                   // motor rpm
     2.333,                 // gear ratio
-    meia::Pid(15, 0.5, 0), // Drive PID constants
+    meia::Pid(17.5, 0, 0), // Drive PID constants
 
     // Turning
     9,                  // IMU port
@@ -65,10 +65,11 @@ void competition_initialize() {
  */
 void autonomous() {
     pros::delay(200);
+    dogo.tare();
     pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
     dogo.move(
         meia::drive, // the action to take (turn/drive)
-        100,         // the total distance to go(100 in)
+        1,         // the total distance to g o (in)
         1,           // The speed to go at max (1 inch per second)
         meia::Curve( // accel curve
             1,       // max acceleration (in/sec^2 ; zero if no curve)

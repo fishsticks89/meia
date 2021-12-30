@@ -34,7 +34,6 @@ namespace meia {
         while (curve(i, max / acceleration, antijerk_percent) * acceleration < max) {
             total += curve(i, max, antijerk_percent);
             i += increment;
-            std::cout << total << std::endl;
         }
         return total;
     }
@@ -47,7 +46,6 @@ namespace meia {
         while (curve(i, max / acceleration, antijerk_percent) * acceleration < max) {
             total += curve(i, max, antijerk_percent);
             i += increment;
-            std::cout << total << std::endl;
         }
         return i / increment;
     }
