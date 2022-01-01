@@ -23,14 +23,12 @@ pros::Controller con(pros::E_CONTROLLER_MASTER);
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+    dogo.end(); // ensures robot is not trying to control without a reset imu
     pros::delay(500);
-    dogo.tare(); // resets imu
+    dogo.init_imu(); // resets imu
     pros::lcd::initialize();
     pros::lcd::set_text(0, "meia - A PROS library for");
-    pros::lcd::set_text(1, "creating reliable autons with");
-    pros::lcd::set_text(2, "beginners in mind, and Worlds");
-    pros::lcd::set_text(3, "on the horizon.");
-    // tasks go here
+    pros::lcd::set_text(1, "creating reliable autons.");
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -69,7 +67,7 @@ void autonomous() {
     pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
     dogo.move(
         meia::drive, // the action to take (turn/drive)
-        1,         // the total distance to g o (in)
+        1,           // the total distance to g o (in)
         1,           // The speed to go at max (1 inch per second)
         meia::Curve( // accel curve
             1,       // max acceleration (in/sec^2 ; zero if no curve)
@@ -81,7 +79,6 @@ void autonomous() {
             0.5,     // the speed to decelerate to (0.5 in/sec)
             15       // anti-jerk percent, the percent of the curve that is rounded
             ));
-    pros::delay(50000);
 }
 
 /**

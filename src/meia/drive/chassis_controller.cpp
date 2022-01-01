@@ -60,7 +60,7 @@ namespace meia {
     void ChassisController::pid_loop(void* p) {
         (*(Pid_task_messenger_struct*)p).mutex.take(2000); // holds the pid task messenger struct mutex so pid task messenger struct can be red in
         auto io = static_cast<Pid_task_messenger_struct*>(p);
-        Pid_task_messenger_struct io_hold = *io;
+        int delta_time = io->delta_time;
         if (!(30 >= io->delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
         (*(Pid_task_messenger_struct*)p).mutex.give(); // returns the mutex
@@ -72,8 +72,6 @@ namespace meia {
         } pid_info;
         while (true) {
             io->mutex.take(3000);
-            // cache io
-            io_hold = *io;
             // log error for total error sampling for tuning
             io->total_error += std::abs(pid_info.left_pid.second.second + pid_info.right_pid.second.second) / (io->delta_time * 100000);
             pid_info.motor_positions = io->chassis_ptr->get_motor_positions();
@@ -82,19 +80,17 @@ namespace meia {
                 pid_info.right_pid = {0, {0, 0}};
                 io->reset = false;
             }
-            io->mutex.give();
-            pid_info.left_pid = util.pid(pid_info.motor_positions.first, io_hold.left_target * io_hold.ticks_per_inch, io_hold.p, io_hold.i, io_hold.d, pid_info.left_pid.second, io_hold.delta_time);
-            pid_info.right_pid = util.pid(pid_info.motor_positions.second, io_hold.right_target * io_hold.ticks_per_inch, io_hold.p, io_hold.i, io_hold.d, pid_info.right_pid.second, io_hold.delta_time);
 
-            io->mutex.take(3000);
+            pid_info.left_pid = util.pid(pid_info.motor_positions.first, io->left_target * io->ticks_per_inch, io->p, io->i, io->d, pid_info.left_pid.second, io->delta_time);
+            pid_info.right_pid = util.pid(pid_info.motor_positions.second, io->right_target * io->ticks_per_inch, io->p, io->i, io->d, pid_info.right_pid.second, io->delta_time);
+
             std::cout << "targeet: " << io->left_target << std::endl;
-            std::cout << "targeet: " << io_hold.left_target << std::endl;
             // std::cout << "current_pos: " << util.dub_to_string(pid_info.motor_positions.first * 1000) << std::endl;
-            std::cout << "voltiage: " << pid_info.left_pid.first << std::endl;
+            std::cout << "voltiage: " << util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127).first << ", " << util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127).second << std::endl;
             io->chassis_ptr->set_voltage(util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
             io->mutex.give();
 
-            pros::delay(io_hold.delta_time);
+            pros::delay(delta_time);
         }
     }
 } // namespace meia

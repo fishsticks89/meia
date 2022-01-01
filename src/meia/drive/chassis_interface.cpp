@@ -6,12 +6,13 @@ namespace meia {
             mutex->take(8000);
             if (*current_id != id)
                 break_allowed = total_move - val > total_move - *amount_completed;
-            else 
+            else
                 break_allowed = true;
             mutex->give();
             if (!break_allowed)
                 pros::delay(10);
         }
+        std::cout << "command delivered" << std::endl;
         return;
     }
 }

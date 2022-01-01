@@ -1,6 +1,12 @@
 #include "main.h"
 namespace meia {
-    enum move_type_e { none, drive, turn };
+    enum move_type_e
+    {
+        none,
+        hold,
+        drive,
+        turn
+    };
     /**
      * A Chassis that you can set the target position of each side and get error on
      *  \param left_motors
@@ -32,19 +38,46 @@ namespace meia {
     class Drive {
         private:
             static util_funcs util;
+            enum phase_e
+            {
+                acc,
+                cruise,
+                decel
+            };
             class MovementInfo {
                 public:
-                    MovementInfo(Curve start_curve = Curve(0), Curve end_curve = Curve(0), double max_speed = 0, double distance = 0, move_type_e type = none, int id = 0, int delay_time = 100)
+                    MovementInfo(move_type_e type = none, Curve start_curve = Curve(0), Curve end_curve = Curve(0), double max_speed = 0, double distance = 0, int id = 0, int delay_time = 100)
                         : start(start_curve), end(end_curve), max_speed(max_speed), distance(distance), type(type), id(id) {
-                        start_curve_end = util.get_curve_distance(delay_time, ((start_curve.acceleration) / (1000 / delay_time)) * (max_speed / (max_speed - start_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) + ((start_curve.endpoint_speed != 0) ? util.get_curve_iterations(delay_time, ((start_curve.acceleration) / (1000 / delay_time)) * (max_speed / (max_speed - start_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) : 0);
-                        end_curve_start = distance - util.get_curve_distance(delay_time, ((end_curve.acceleration) / (1000 / delay_time)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) + ((end_curve.endpoint_speed != 0) ? util.get_curve_iterations(delay_time, ((end_curve.acceleration) / (1000 / delay_time)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) * end_curve.endpoint_speed : 0);
+                        // gets the iterations of the start curve if it exists
+                        if (start_curve.endpoint_speed != 0)
+                            start_curve_end_iterations = util.get_curve_iterations(
+                                (              // how often the curve will be sampled
+                                    delay_time // the ms interval the curve will be sampled at
+                                    *
+                                    (                              // the acceleration of the curve (the multiplier for the in/ms normal acceleration)
+                                        (start_curve.acceleration) // the acceleration of the curve in in/s^2
+                                        *
+                                        1000 // converts in/s^2 to in/ms^2
+                                        )),
+                                // the robot only needs to accelerate the difference between
+                                max_speed - start_curve.endpoint_speed, // max value output of the curve to be sampled
+                                start_curve.antijerk_percent            // the antijerk percent of the curve to be sampled
+                            );
+                        start_curve_end_distance = util.get_curve_distance(
+                                                       delay_time, // how often the curve will be sampled
+                                                       (start_curve.acceleration) / (delay_time / 1000) * (max_speed / (max_speed - start_curve.endpoint_speed)),
+                                                       max_speed, // max value output of the curve to be sampled
+                                                       start_curve.antijerk_percent) +
+                                                   start_curve_end_iterations * start_curve.endpoint_speed;
+                        end_curve_start = distance - util.get_curve_distance(delay_time, ((end_curve.acceleration) / (delay_time / 1000)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) + ((end_curve.endpoint_speed != 0) ? util.get_curve_iterations(delay_time, ((end_curve.acceleration) / (delay_time / 1000)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) * end_curve.endpoint_speed : 0);
                     };
+                    int start_curve_end_iterations = 0;
                     move_type_e type;
                     int id;
                     double max_speed;
                     double distance;
                     Curve start;
-                    double start_curve_end;
+                    double start_curve_end_distance = 0;
                     Curve end;
                     double end_curve_start;
             };
@@ -60,6 +93,8 @@ namespace meia {
                     double d;           // Derivative gain
                     double total_error; // the total error experienced
                     bool reset = false;
+                    bool imu_calibrating = false;
+                    bool imu_calibrated = false;
                     MovementInfo current;
                     MovementInfo next;
                     double amount_completed = 0;
@@ -94,6 +129,7 @@ namespace meia {
             static void pid_loop(void* p); // the function the task uses to control the chassis
             int delay_time;
             static int* delay_time_ptr;
+
         public:
             explicit Drive(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, Pid drive_pid, int imu_port, Pid turn_pid, int delay_time = 10)
                 : chassis(left_motors, right_motors, wheel_diameter, motor_rpm, gear_ratio, drive_pid, delay_time),
@@ -103,6 +139,7 @@ namespace meia {
                       delay_time),
                   profile_loop_task(pid_loop, &profiling_task_messenger, "profiling_task"),
                   delay_time(delay_time){};
+            // gets if the imu is calibrating
             // a function to change the correctional constants on the controller for the drive
             void set_drive_pid_constants(double p, double i, double d);
             // a function to change the correctional constants on the controller for the drive
@@ -118,7 +155,6 @@ namespace meia {
              * Stops autonomus control
              * Clears all targets
              * Clears total error
-             * resets imu
              */
             void tare();
             /**
@@ -127,6 +163,13 @@ namespace meia {
              * Clears total error
              */
             void end();
+            /**
+             * Stops autonomus control
+             * Clears all targets
+             * Clears total error
+             * resets the imu
+             */
+            void init_imu();
             MovementTelemetry move_telem;
             MovementTelemetry move(move_type_e type, double distance, double max_speed = 0, Curve start_curve = Curve(), Curve end_curve = Curve());
     };
