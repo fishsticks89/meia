@@ -3,6 +3,9 @@ namespace meia {
     std::pair<double, double> add_pair(std::pair<double, double> a, std::pair<double, double> b) {
         return {a.first + b.first, a.second + b.second};
     }
+    std::pair<double, double> add_pair(std::pair<double, double> a, double b) {
+        return {a.first + b, a.second + b};
+    }
     //! Util Funcs
     /**
      * a function to get how far a turn needs to be
@@ -40,15 +43,27 @@ namespace meia {
         profiling_task_messenger.total_error = 0;
         profiling_task_messenger.reset = true;
         profiling_task_messenger.chassis_ptr->end();
+        profiling_task_messenger.imu->tare();
         profiling_task_messenger.mutex.give();
     }
 
     void Drive::tare() {
         end();
+    }
+
+    void Drive::init_imu() {
+        end();
         profiling_task_messenger.mutex.take(10000);
-        profiling_task_messenger.imu->tare();
+        profiling_task_messenger.imu->reset();
+        profiling_task_messenger.imu_calibrating = true;
+        while (profiling_task_messenger.imu->is_calibrating()) {
+            pros::delay(10);
+        }
+        profiling_task_messenger.imu_calibrating = false;
+        profiling_task_messenger.imu_calibrated = true;
         profiling_task_messenger.mutex.give();
     }
+
     void Drive::set_drive_pid_constants(double p, double i, double d) {
         profiling_task_messenger.mutex.take(1000);
         profiling_task_messenger.chassis_ptr->set_pid_constants(p, i, d);
@@ -90,7 +105,7 @@ namespace meia {
         profiling_task_messenger.mutex.take(3000);
         int id = pros::millis();
         std::cout << "injecting >> " << id << std::endl;
-        profiling_task_messenger.next = MovementInfo(start, end, max_speed, distance, type, id, delay_time);
+        profiling_task_messenger.next = MovementInfo(type, start, end, max_speed, distance, id, delay_time);
         profiling_task_messenger.mutex.give();
         // waits for movement to begin
         break_allowed = false;
@@ -106,7 +121,7 @@ namespace meia {
         std::cout << "dun" << std::endl;
         std::cout << profiling_task_messenger.current.id << std::endl;
 
-        return MovementTelemetry(distance, /*something in messenger*/ nullptr, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
+        return MovementTelemetry(distance, &profiling_task_messenger.amount_completed, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
     }
 
     //! The Task
@@ -115,28 +130,36 @@ namespace meia {
 
         (*(Profiling_task_messenger_struct*)p).mutex.take(2000); // holds the pid task messenger struct mutex so pid task messenger struct can be red in
         auto io = static_cast<Profiling_task_messenger_struct*>(p);
-        Profiling_task_messenger_struct io_hold = *io;
-        (*(Profiling_task_messenger_struct*)p).mutex.give(); // returns the mutex
 
-        if (!(30 >= io_hold.delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
+        int delta_time = io->delta_time;
+
+        if (!(30 >= io->delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
+        
+        (*(Profiling_task_messenger_struct*)p).mutex.give(); // returns the mutex
 
         struct profiling_info_struct {
                 profiling_info_struct(){};
-                double imu_reading;
-                double error;
-                std::pair<double, std::pair<double, double>> pid_hold = {0, {0, 0}};
+                struct turn_struct {
+                    turn_struct(){};
+                    double imu_reading;
+                    double correct;
+                    std::pair<double, std::pair<double, double>> pid_hold = {0, {0, 0}};
+                    double target = 0; // rotational target for turn pid in degrees
+                } turn;
+                struct profiling_struct {
+                    MovementInfo move;
+                    int i = 0;
+                } profiling;
                 std::pair<double, double> change_target = {0, 0};
-                double target = 0; // rotational target for turn pid in degrees
-                MovementInfo move;
         } info;
-
+        
         while (true) {
             io->mutex.take(3000);
             // reset logic
             if (io->reset) {
                 // resets pid
-                info.pid_hold = {0, {0, 0}};
+                info.turn.pid_hold = {0, {0, 0}};
                 // resets profiling
                 io->resetMove();
                 io->reset = false;
@@ -144,42 +167,42 @@ namespace meia {
             // new move logic
             if (std::abs(io->amount_completed) >= std::abs(io->current.distance))
                 io->current = io->next;
-                io->next = MovementInfo();
             std::cout << "current: " << io->current.distance << std::endl;
             std::cout << "completed: " << io->amount_completed << std::endl;
-            // cache messenger
-            io_hold = *io;
-            io->mutex.give();
 
             info.change_target = {0, 0}; // resets the amount the robot must move
-            //* No mutex is held during IMU operation; all IMU references are unsafe unless task is disabled
-            info.imu_reading = io_hold.imu->get_euler().yaw; // reads in global z axis from imu
+            info.turn.imu_reading = io->imu->get_euler().yaw; // reads in global z axis from imu
 
             //! Motion Profiling Stuff
-
-            if (io_hold.current.type == drive)
-                info.change_target = add_pair(info.change_target, {io_hold.current.distance, io_hold.current.distance});
-            // if (io_hold.current.type == turn)
-            //     info.target += io_hold.current.distance;
-            
-            // Todo: curve stuff
+            if (io->current.type == drive) {
+                if (io->amount_completed < io->current.start_curve_end_distance)
+                    info.change_target = add_pair(info.change_target, util.curve());
+                io->amount_completed += info.change_target.first;
+                info.profiling.i++;
+            } else if (io->current.type == turn) {
+                info.turn.target += io->current.distance;
+            }
 
             //! Turn Pid Stuff
-            info.error = (std::abs(util.get_dist(true, info.imu_reading, info.target)) < std::abs(util.get_dist(false, info.imu_reading, info.target)) ? util.get_dist(true, info.imu_reading, info.target) : util.get_dist(false, info.imu_reading, info.target));
-            info.pid_hold = util.pid(0, info.error, io_hold.p, io_hold.i, io_hold.d, info.pid_hold.second, io_hold.delta_time);
-            // info.change_target = {info.pid_hold.first / -10000, info.pid_hold.first / 10000};
+            if (io->current.type == drive || io->current.type == hold) {
+                if (!io->imu_calibrated)
+                    throw "imu not calibrated";
+                info.turn.correct = (std::abs(util.get_dist(true, info.turn.imu_reading, info.turn.target)) < std::abs(util.get_dist(false, info.turn.imu_reading, info.turn.target)) ? util.get_dist(true, info.turn.imu_reading, info.turn.target) : util.get_dist(false, info.turn.imu_reading, info.turn.target));
+                info.turn.pid_hold = util.pid(0, info.turn.correct, io->p, io->i, io->d, info.turn.pid_hold.second, io->delta_time);
+                info.change_target = add_pair(info.change_target, {info.turn.pid_hold.first / -10000, info.turn.pid_hold.first / 10000});
+            }
+
+            // Todo: debting (so move amount_completed here)
 
             //! Output
-
-            io->mutex.take(3000);
             std::cout << "delta target: " << info.change_target.first << std::endl;
             io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
-            io->total_error += std::abs(info.pid_hold.second.second) / (io_hold.delta_time * 100000);
+            io->total_error += std::abs(info.turn.pid_hold.second.second) / (io->delta_time * 100000);
             io->mutex.give();
 
-            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.imu_reading) + " target: " + util.dub_to_string(info.target));
-            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.pid_hold.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
-            pros::delay(io_hold.delta_time);
+            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.turn.imu_reading) + " target: " + util.dub_to_string(info.turn.target));
+            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.turn.pid_hold.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
+            pros::delay(delta_time);
         }
     }
 } // namespace meia

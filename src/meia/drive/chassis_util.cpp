@@ -26,24 +26,30 @@ namespace meia {
             return max;
         }
     }
-    double util_funcs::get_curve_distance(double increment, double acceleration, double max, double antijerk_percent) {
+    double util_funcs::get_curve_distance(double increment, double max, double antijerk_percent) {
         if (increment <= 0)
             throw "too small dumbass";
         double total = 0;
         double i = increment;
-        while (curve(i, max / acceleration, antijerk_percent) * acceleration < max) {
+        while (curve(i, max, antijerk_percent) < max) {
             total += curve(i, max, antijerk_percent);
             i += increment;
         }
         return total;
     }
-
-    double util_funcs::get_curve_iterations(double increment, double acceleration, double max, double antijerk_percent) {
+    /**
+     * \param increment
+     *      how often the curve is sampled
+     * \param acceleration 
+     *      the multiplier on the speed of the curve
+     * \param 
+     */
+    double util_funcs::get_curve_iterations(double increment, double max, double antijerk_percent) {
         if (increment <= 0)
             throw "too small dumbass";
         double total = 0;
         double i = increment;
-        while (curve(i, max / acceleration, antijerk_percent) * acceleration < max) {
+        while (curve(i, max, antijerk_percent) < max) {
             total += curve(i, max, antijerk_percent);
             i += increment;
         }
@@ -70,7 +76,7 @@ namespace meia {
 
     std::pair<double, double> util_funcs::normalize(double l_volt, double r_volt, double max) {
         double l_dif = (std::abs(l_volt) > max) ? std::abs(l_volt) - max : 0;
-        double r_dif = (std::abs(r_volt) > max) ? std::abs(l_volt) - max : 0;
+        double r_dif = (std::abs(r_volt) > max) ? std::abs(r_volt) - max : 0;
         // scale down the voltages similarly if one is over 127
         bool greater_dif = l_dif > r_dif;
         double dif = (greater_dif) ? l_dif : r_dif;
