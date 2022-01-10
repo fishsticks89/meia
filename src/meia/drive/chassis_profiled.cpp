@@ -148,7 +148,6 @@ namespace meia {
                     double target = 0; // rotational target for turn pid in degrees
                 } turn;
                 struct profiling_struct {
-                    MovementInfo move;
                     int i = 0;
                 } profiling;
                 std::pair<double, double> change_target = {0, 0};
@@ -162,11 +161,13 @@ namespace meia {
                 info.turn.pid_hold = {0, {0, 0}};
                 // resets profiling
                 io->resetMove();
+                info.profiling = profiling_info_struct::profiling_struct();
                 io->reset = false;
             }
             // new move logic
             if (std::abs(io->amount_completed) >= std::abs(io->current.distance))
                 io->current = io->next;
+                info.profiling.i = 0;
             std::cout << "current: " << io->current.distance << std::endl;
             std::cout << "completed: " << io->amount_completed << std::endl;
 
