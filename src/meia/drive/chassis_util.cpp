@@ -12,20 +12,26 @@ namespace meia {
         return std::sin(x * degrees_to_radians);
     }
 
-    double util_funcs::curve(double sample, double max, int antijerk_percent) {
+    double curve(double sample, double max, int antijerk_percent) {
+        int rev = 1;
+        if (max < 0) {
+          max = std::abs(max);
+          rev = -1;
+        }
         const double radius = antijerk_percent * ((max / (2 * (1 - dsin(45)))) / 100);
         if (sample < 0) {
             throw "out of bounds";
         } else if (sample < dcos(-45) * radius) {
-            return radius - std::sqrt(std::pow(radius, 2) - std::pow(sample, 2));
+            return (radius - std::sqrt(std::pow(radius, 2) - std::pow(sample, 2))) * rev;
         } else if (sample < (max - (radius - (std::abs(dsin(225))) * radius) - (radius - (dsin(45) * radius)) + (dcos(-45) * radius))) {
-            return (sample - dcos(-45) * radius) + (radius - dsin(45) * radius);
+            return ((sample - dcos(-45) * radius) + (radius - dsin(45) * radius)) * rev;
         } else if (sample < (max - (radius - (std::abs(sin(225)) * radius) - (radius - sin(45) * radius)) + (cos(-45) * radius) + (cos(225) * radius))) {
-            return (max - radius) + std::sqrt(std::pow(radius, 2) - std::pow((sample - (max - (radius - (std::abs(dsin(225)) * radius)) - (radius - (dsin(45) * radius)) + (dcos(-45) * radius) + (std::abs(dcos(225)) * radius))), 2));
+            return ((max - radius) + std::sqrt(std::pow(radius, 2) - std::pow((sample - (max - (radius - (std::abs(dsin(225)) * radius)) - (radius - (dsin(45) * radius)) + (dcos(-45) * radius) + (std::abs(dcos(225)) * radius))), 2))) * rev;
         } else {
-            return max;
+            return max * rev;
         }
     }
+
     double util_funcs::get_curve_distance(double increment, double max, double antijerk_percent) {
         if (increment <= 0)
             throw "too small dumbass";

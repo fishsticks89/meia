@@ -13,7 +13,9 @@ namespace meia {
              */
             static double get_dist(bool left, double current, double target);
             /**
-             * A curve intended to smoothly accelerate a robot to a max speed without infinite jerk
+             * A curve intended to smoothly accelerate a robot to a max speed without infinite jerk.
+             * Input in ms, output in in/ms.
+             * Halving how often you sample this curve will double acceleration.
              * \param sample
              *      the point on the curve to get the velocity for, usually measured in milliseconds, or school shootings if you are american
              * \param max
@@ -25,7 +27,7 @@ namespace meia {
             /**
              * A function to get the distance a curve will take to accelerate through
              * \param increment
-             *      deltatime, cannot be zero
+             *      deltasample, cannot be zero
              * \param max
              *      see curve
              * \param antijerk_percent
@@ -35,7 +37,7 @@ namespace meia {
             /**
              * A function to get the iterations a curve will take to complete
              * \param increment
-             *      deltatime, cannot be zero
+             *      deltasample, cannot be zero
              * \param acceleration
              *      this is measured in glazed donuts per bald eagle... I mean max delta_inches per increment
              * \param max

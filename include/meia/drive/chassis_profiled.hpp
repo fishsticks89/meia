@@ -49,37 +49,61 @@ namespace meia {
                     MovementInfo(move_type_e type = none, Curve start_curve = Curve(0), Curve end_curve = Curve(0), double max_speed = 0, double distance = 0, int id = 0, int delay_time = 100)
                         : start(start_curve), end(end_curve), max_speed(max_speed), distance(distance), type(type), id(id) {
                         // gets the iterations of the start curve if it exists
-                        if (start_curve.endpoint_speed != 0)
-                            start_curve_end_iterations = util.get_curve_iterations(
+                        if (start_curve.acceleration != 0) {
+                            start_curve_iterations = util.get_curve_iterations(
                                 (              // how often the curve will be sampled
-                                    delay_time // the ms interval the curve will be sampled at
-                                    *
-                                    (                              // the acceleration of the curve (the multiplier for the in/ms normal acceleration)
-                                        (start_curve.acceleration) // the acceleration of the curve in in/s^2
-                                        *
-                                        1000 // converts in/s^2 to in/ms^2
-                                        )),
+                                    (delay_time / 1000.0) // the ms interval the curve will be sampled at (converted to sec)
+                                    /                      // the acceleration of the curve (the multiplier for the in/ms normal acceleration)
+                                    start_curve.acceleration // the acceleration of the curve in in/s^2 
+                                ),
                                 // the robot only needs to accelerate the difference between
                                 max_speed - start_curve.endpoint_speed, // max value output of the curve to be sampled
                                 start_curve.antijerk_percent            // the antijerk percent of the curve to be sampled
                             );
-                        start_curve_end_distance = util.get_curve_distance(
-                                                       delay_time, // how often the curve will be sampled
-                                                       (start_curve.acceleration) / (delay_time / 1000) * (max_speed / (max_speed - start_curve.endpoint_speed)),
-                                                       max_speed, // max value output of the curve to be sampled
-                                                       start_curve.antijerk_percent) +
-                                                   start_curve_end_iterations * start_curve.endpoint_speed;
-                        end_curve_start = distance - util.get_curve_distance(delay_time, ((end_curve.acceleration) / (delay_time / 1000)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) + ((end_curve.endpoint_speed != 0) ? util.get_curve_iterations(delay_time, ((end_curve.acceleration) / (delay_time / 1000)) * (max_speed / (max_speed - end_curve.endpoint_speed)), max_speed, start_curve.antijerk_percent) * end_curve.endpoint_speed : 0);
+                        } else {
+                            start_curve_iterations = 0;
+                        }
+                        start_curve_distance = (util.get_curve_distance(
+                                                        (delay_time / 1000.0) / // the curve can only be sampled as often as the delay_time of the loop (to sec)
+                                                        start_curve.acceleration, // multiplied by the acceleration factor in in/sec
+                                                        max_speed - start_curve.endpoint_speed, // max value output of the curve to be sampled
+                                                        start_curve.antijerk_percent)
+                                                        + (start_curve_iterations * start_curve.endpoint_speed)) // the block of endpoint speed upon which the 
+                                                        * delay_time/1000.0; // the curve and endpoint speed output must be multiplied by delay (in sec) time to ensure a consistant output across all delay times
+                        if (end_curve.acceleration != 0) {
+                            end_curve_iterations = util.get_curve_iterations(
+                                (              // how often the curve will be sampled
+                                    (delay_time/1000.0) // the ms interval the curve will be sampled at (sec)
+                                    /                      // the acceleration of the curve (the multiplier for the in/ms normal acceleration)
+                                end_curve.acceleration // the acceleration of the curve in in/s^2
+                                ),
+                                // the robot only needs to accelerate the difference between
+                                max_speed - end_curve.endpoint_speed, // max value output of the curve to be sampled
+                                end_curve.antijerk_percent            // the antijerk percent of the curve to be sampled
+                            );
+                        } else {
+                            end_curve_iterations = 0;
+                        }
+                        end_curve_distance = (util.get_curve_distance(
+                                                        (delay_time / 1000.0) / // the curve can only be sampled as often as the delay_time of the loop (to sec)
+                                                        end_curve.acceleration, // multiplied by the acceleration factor in in/sec
+                                                        max_speed - end_curve.endpoint_speed, // max value output of the curve to be sampled
+                                                        end_curve.antijerk_percent)
+                                                        + (end_curve_iterations * end_curve.endpoint_speed)) // the block of endpoint speed upon which the 
+                                                        * delay_time/1000.0; // the curve and endpoint speed output must be multiplied by delay (in sec) time to ensure a consistant output across all delay times
+        
                     };
-                    int start_curve_end_iterations = 0;
                     move_type_e type;
                     int id;
                     double max_speed;
                     double distance;
                     Curve start;
-                    double start_curve_end_distance = 0;
+                    int start_curve_iterations = 0;
+                    double start_curve_distance = 0;
                     Curve end;
-                    double end_curve_start;
+                    int end_curve_iterations;
+                    double end_curve_distance;
+                    int total_iterations;
             };
 
             struct Profiling_task_messenger_struct {
@@ -134,7 +158,7 @@ namespace meia {
             explicit Drive(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, Pid drive_pid, int imu_port, Pid turn_pid, int delay_time = 10)
                 : chassis(left_motors, right_motors, wheel_diameter, motor_rpm, gear_ratio, drive_pid, delay_time),
                   imu(imu_port),
-                  profiling_task_messenger(&chassis, &imu, turn_pid, ((motor_rpm * gear_ratio) * (wheel_diameter * M_PI) // max speed
+                  profiling_task_messenger(&chassis, &imu, turn_pid, ((motor_rpm * gear_ratio) * (wheel_diameter * M_PI)
                                                                          ),
                       delay_time),
                   profile_loop_task(pid_loop, &profiling_task_messenger, "profiling_task"),
