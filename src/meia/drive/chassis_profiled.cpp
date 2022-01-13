@@ -178,7 +178,7 @@ namespace meia {
             if (io->current.type == drive) {
                 if (info.profiling.i <= io->current.start_curve_iterations)
                     info.change_target = add_pair(info.change_target, (util.curve(info.profiling.i * (io->current.start.acceleration / 1000), io->current.max_speed - io->current.start.endpoint_speed, io-> current.start.antijerk_percent) + io->current.start.endpoint_speed) * delta_time);
-                else if (info.profiling.i < io->total_error - io->current.end_curve_iterations)
+                else if (info.profiling.i < io->current.total_iterations - io->current.end_curve_iterations)
                     info.change_target = add_pair(info.change_target, io->current.max_speed * delta_time);
                 else
                     info.change_target = add_pair(info.change_target, (util.curve((io->current.total_iterations - io->current.end_curve_iterations) * (io->current.end.acceleration / 1000), io->current.max_speed - io->current.end.endpoint_speed, io-> current.end.antijerk_percent) + io->current.end.endpoint_speed) * delta_time);
