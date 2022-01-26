@@ -8,15 +8,9 @@
 
 # PROS
 bin/
+.vscode/
 compile_commands.json
 temp.log
 temp.errors
 *.ini
 .d/
-
-# Ignore vscode settings
-.vscode/*
-
-# Include certain vscode intelisense features
-!.vscode/c_cpp_properties.json
-!.vscode/tasks.json

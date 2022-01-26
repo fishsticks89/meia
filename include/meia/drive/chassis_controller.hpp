@@ -68,7 +68,8 @@ namespace meia {
                                                         / (wheel_diameter * M_PI)                // Circumference of wheel
                                                         ),
                       delay_time),
-                  pid_loop_task(pid_loop, &pid_task_messenger, "pid_task"){};
+                    pid_loop_task(pid_loop, &pid_task_messenger, "pid_task")
+                {};
             // a function to change the targets of the pid task
             void change_target(double l, double r);
             // a function to change the correctional constants on the controller for the drive

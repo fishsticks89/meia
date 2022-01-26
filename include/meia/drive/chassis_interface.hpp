@@ -31,16 +31,16 @@ namespace meia {
     };
     class MovementTelemetry {
         private:
-            double total_move;
+            double total_move = 1;
             double* amount_completed;
             pros::Mutex* mutex;
-            int id;
+            int id = -1;
             int* current_id;
 
         public:
-            MovementTelemetry(double total_move = 0, double* amount_completed = nullptr, int* current_id = nullptr, pros::Mutex* completed = nullptr, int id = -1)
+            MovementTelemetry(double total_move, double* amount_completed, int* current_id, pros::Mutex* mutex, int id)
                 : total_move(total_move), amount_completed(amount_completed), mutex(mutex), id(id), current_id(current_id) {};
+            MovementTelemetry() {};
             void wait_until(double val);
-            
     };
 } // namespace meia

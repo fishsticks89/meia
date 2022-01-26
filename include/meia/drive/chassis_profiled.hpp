@@ -46,7 +46,7 @@ namespace meia {
             };
             class MovementInfo {
                 public:
-                    MovementInfo(move_type_e type = none, Curve start_curve = Curve(0), Curve end_curve = Curve(0), double max_speed = 0, double distance = 0, int id = 0, int delay_time = 100)
+                    MovementInfo(move_type_e type, Curve start_curve, Curve end_curve, double max_speed, double distance,  int delay_time, int id)
                         : start(start_curve), end(end_curve), max_speed(max_speed), distance(distance), type(type), id(id) {
                         // gets the iterations of the start curve if it exists
                         if (start_curve.acceleration != 0) {
@@ -91,10 +91,11 @@ namespace meia {
                                                   end_curve.antijerk_percent) +
                                                  (end_curve_iterations * end_curve.endpoint_speed)) // the block of endpoint speed upon which the
                                              * delay_time / 1000.0;                                 // the curve and endpoint speed output must be multiplied by delay (in sec) time to ensure a consistant output across all delay times
-                        int body_iterations = std::ceil((distance - (start_curve_distance + end_curve_distance)) / (max_speed * delay_time / 1000));
+                        int body_iterations = std::round((distance - (start_curve_distance + end_curve_distance)) / (max_speed * delay_time / 1000));
                         total_iterations = start_curve_iterations + end_curve_iterations + body_iterations;
                         debt = distance - ((body_iterations * max_speed * delay_time / 1000) + start_curve_distance + end_curve_distance);
                     };
+                    MovementInfo() : id(0) {};
                     move_type_e type;
                     int id;
                     double max_speed;
@@ -137,7 +138,7 @@ namespace meia {
                      * \param drive_task_delay_factor
                      *      how many milliseconds the drive waits
                      */
-                    Profiling_task_messenger_struct(ChassisController* chassis_ptr, pros::Imu* imu, Pid pid, double max_speed, int drive_task_delay_factor = 5)
+                    Profiling_task_messenger_struct(ChassisController* chassis_ptr, pros::Imu* imu , Pid pid, double max_speed, int drive_task_delay_factor = 5)
                         : chassis_ptr{chassis_ptr},
                           delta_time{drive_task_delay_factor},
                           max_speed{max_speed},
@@ -146,7 +147,8 @@ namespace meia {
                           i{pid.i},
                           d{pid.d},
                           current(),
-                          next() {
+                          next()
+                           {
                     }
             };
             Profiling_task_messenger_struct profiling_task_messenger; // an instance of the pid task messenger struct used to commuicate with the pid task

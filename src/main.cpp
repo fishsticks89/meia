@@ -1,5 +1,6 @@
 #include "main.h"
-meia::Drive dogo(
+pros::Controller con(pros::E_CONTROLLER_MASTER);
+meia::Drive dogo (
     // Driving
     {20, -17},             // left motor ports
     {-19, 18},             // right motor ports
@@ -9,26 +10,19 @@ meia::Drive dogo(
     meia::Pid(17.5, 0, 0), // Drive PID constants
 
     // Turning
-    9,                  // IMU port
+    16,                  // IMU port
     meia::Pid(1, 0, 0), // Turn PID Constants
 
     // Options
     5 // delay time
 );
-pros::Controller con(pros::E_CONTROLLER_MASTER);
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
+
 void initialize() {
-    dogo.end(); // ensures robot is not trying to control without a reset imu
     pros::delay(500);
-    dogo.init_imu(); // resets imu
     pros::lcd::initialize();
     pros::lcd::set_text(0, "meia - A PROS library for");
     pros::lcd::set_text(1, "creating reliable autons.");
+    dogo.init_imu(); // resets imu
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -36,6 +30,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
+    dogo.end();
 }
 
 /**
@@ -67,7 +62,7 @@ void autonomous() {
     pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
     dogo.move(
         meia::drive, // the action to take (turn/drive)
-        1,           // the total distance to g o (in)
+        30,           // the total distance to g o (in)
         1,           // The speed to go at max (1 inch per second)
         meia::Curve( // accel curve
             1,       // max acceleration (in/sec^2 ; zero if no curve)
@@ -79,6 +74,8 @@ void autonomous() {
             0.5,     // the speed to decelerate to (0.5 in/sec)
             15       // anti-jerk percent, the percent of the curve that is rounded
             ));
+
+    pros::delay(8000);
 }
 
 /**

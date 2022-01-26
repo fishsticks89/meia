@@ -25,7 +25,10 @@ namespace meia {
     // get the ticks of each side
     std::pair<double, double>
     Chassis::get_motor_positions() {
-        return {util.sgn(left_motors[0]) * pros::c::motor_get_position(abs(left_motors[0])), util.sgn(right_motors[0]) * pros::c::motor_get_position(abs(right_motors[0]))};
+        return {
+        util.sgn(left_motors[0]) * pros::c::motor_get_position(abs(left_motors[0])), 
+        util.sgn(right_motors[0]) * pros::c::motor_get_position(abs(right_motors[0]))
+        };
     }
 
     // get the temps of each motor starting with left side

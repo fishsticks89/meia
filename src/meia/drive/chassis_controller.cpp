@@ -85,7 +85,7 @@ namespace meia {
             pid_info.right_pid = util.pid(pid_info.motor_positions.second, io->right_target * io->ticks_per_inch, io->p, io->i, io->d, pid_info.right_pid.second, io->delta_time);
 
             std::cout << "targeet: " << io->left_target << std::endl;
-            // std::cout << "current_pos: " << util.dub_to_string(pid_info.motor_positions.first * 1000) << std::endl;
+            std::cout << "current_pos: " << util.dub_to_string(pid_info.motor_positions.first * 1000) << std::endl;
             std::cout << "voltiage: " << util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127).first << ", " << util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127).second << std::endl;
             io->chassis_ptr->set_voltage(util.normalize(pid_info.left_pid.first, pid_info.right_pid.first, 127));
             io->mutex.give();

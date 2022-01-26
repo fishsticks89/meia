@@ -54,11 +54,12 @@ namespace meia {
     void Drive::init_imu() {
         end();
         profiling_task_messenger.mutex.take(10000);
-        profiling_task_messenger.imu->reset();
+        pros::lcd::set_text(3, std::to_string(profiling_task_messenger.imu->reset()));
         profiling_task_messenger.imu_calibrating = true;
         while (profiling_task_messenger.imu->is_calibrating()) {
             pros::delay(10);
         }
+        pros::lcd::set_text(3, "yes");
         profiling_task_messenger.imu_calibrating = false;
         profiling_task_messenger.imu_calibrated = true;
         profiling_task_messenger.mutex.give();
@@ -121,7 +122,7 @@ namespace meia {
         std::cout << "dun" << std::endl;
         std::cout << profiling_task_messenger.current.id << std::endl;
 
-        return MovementTelemetry(distance, &profiling_task_messenger.amount_completed, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
+        return MovementTelemetry(distance, & profiling_task_messenger.amount_completed, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
     }
 
     //! The Task
