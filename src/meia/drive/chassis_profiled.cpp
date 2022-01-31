@@ -52,13 +52,17 @@ namespace meia {
     }
 
     void Drive::init_imu() {
+        std::cout << "beginning" << std::endl;
         end();
+        std::cout << "ended tasks!" << std::endl;
         profiling_task_messenger.mutex.take(10000);
-        pros::lcd::set_text(3, std::to_string(profiling_task_messenger.imu->reset()));
+        profiling_task_messenger.imu->reset();
+        std::cout << "imu reset started!" << std::endl;
         profiling_task_messenger.imu_calibrating = true;
         while (profiling_task_messenger.imu->is_calibrating()) {
             pros::delay(10);
         }
+        std::cout << "imu reset finished!" << std::endl;
         pros::lcd::set_text(3, "yes");
         profiling_task_messenger.imu_calibrating = false;
         profiling_task_messenger.imu_calibrated = true;
@@ -99,27 +103,27 @@ namespace meia {
             profiling_task_messenger.mutex.take(3000);
             break_allowed = profiling_task_messenger.next.type == none;
             profiling_task_messenger.mutex.give();
-            std::cout << "waiting for allowed" << std::endl;
+            // std::cout << "move_req - waiting for allowed" << std::endl;
             if (!break_allowed)
                 pros::delay(10);
         }
         profiling_task_messenger.mutex.take(3000);
         int id = pros::millis();
-        std::cout << "injecting >> " << id << std::endl;
+        std::cout << "move_req - injecting >> " << id << std::endl;
         profiling_task_messenger.next = MovementInfo(type, start, end, max_speed, distance, id, delay_time);
         profiling_task_messenger.mutex.give();
         // waits for movement to begin
         break_allowed = false;
         while (!break_allowed) {
-        std::cout << "awiatign begin >> " << id << std::endl;
             profiling_task_messenger.mutex.take(3000);
+            std::cout << "move_req - awiatign begin >> " << id << std::endl;
             break_allowed = profiling_task_messenger.current.id == id;
-            std::cout << "current >> " << profiling_task_messenger.current.id << std::endl;
+            std::cout << "move_req - current move: >> " << profiling_task_messenger.current.id << std::endl;
             profiling_task_messenger.mutex.give();
             if (!break_allowed)
                 pros::delay(10);
         }
-        std::cout << "dun" << std::endl;
+        std::cout << "move_req - dun" << std::endl;
         std::cout << profiling_task_messenger.current.id << std::endl;
 
         return MovementTelemetry(distance, & profiling_task_messenger.amount_completed, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
@@ -169,8 +173,8 @@ namespace meia {
             if (std::abs(io->amount_completed) >= std::abs(io->current.distance))
                 io->current = io->next;
                 info.profiling.i = 0;
-            std::cout << "current: " << io->current.distance << std::endl;
-            std::cout << "completed: " << io->amount_completed << std::endl;
+            // std::cout << "prof - req move dist: " << io->current.distance << std::endl;
+            // std::cout << "prof - amount move dist completed: " << io->amount_completed << std::endl;
 
             info.change_target = {0, 0}; // resets the amount the robot must move
             info.turn.imu_reading = io->imu->get_euler().yaw; // reads in global z axis from imu
@@ -201,13 +205,13 @@ namespace meia {
             // Todo: debting (so move amount_completed here)
 
             //! Output
-            std::cout << "delta target: " << info.change_target.first << std::endl;
+            // std::cout << "prof - delta target: " << info.change_target.first << std::endl;
             io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
             io->total_error += std::abs(info.turn.pid_hold.second.second) / (io->delta_time * 100000);
             io->mutex.give();
 
-            pros::lcd::set_text(5, "read: " + util.dub_to_string(info.turn.imu_reading) + " target: " + util.dub_to_string(info.turn.target));
-            pros::lcd::set_text(6, " pid-correction: " + util.dub_to_string(info.turn.pid_hold.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
+            pros::lcd::set_text(5, "prof - imu_read: " + util.dub_to_string(info.turn.imu_reading) + " target: " + util.dub_to_string(info.turn.target));
+            pros::lcd::set_text(6, "prof - imu_pid-correction: " + util.dub_to_string(info.turn.pid_hold.first) + " {" + util.dub_to_string(info.change_target.first * 10000) + ", " + util.dub_to_string(info.change_target.first * 100) + "}");
             pros::delay(delta_time);
         }
     }

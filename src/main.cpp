@@ -16,13 +16,16 @@ meia::Drive dogo (
     // Options
     5 // delay time
 );
+meia::Console console;
 
 void initialize() {
     pros::delay(500);
-    pros::lcd::initialize();
-    pros::lcd::set_text(0, "meia - A PROS library for");
-    pros::lcd::set_text(1, "creating reliable autons.");
+    console.init();
+    pros::delay(1000);
+    console.print();
+    std::cout << "we made it this far" << std::endl;
     dogo.init_imu(); // resets imu
+    std::cout << "imu!" << std::endl;
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -30,6 +33,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
+    std::cout << "disbale?????" << std::endl;
     dogo.end();
 }
 
@@ -57,6 +61,7 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+    std::cout << "auton!" << std::endl;
     pros::delay(200);
     dogo.tare();
     pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
@@ -71,7 +76,7 @@ void autonomous() {
             ),
         meia::Curve( // decel curve
             1,       // max deceleration in in/sec^2
-            0.5,     // the speed to decelerate to (0.5 in/sec)
+            0,     // the speed to decelerate to (0.5 in/sec)
             15       // anti-jerk percent, the percent of the curve that is rounded
             ));
 
@@ -87,6 +92,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+    std::cout << "op!" << std::endl;
     while (true) {
         dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
         pros::delay(5);
