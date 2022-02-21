@@ -5,6 +5,7 @@
 # Executables
 *.bin
 *.elf
+*.exe
 
 # PROS
 bin/
@@ -13,7 +14,7 @@ compile_commands.json
 temp.log
 temp.errors
 *.ini
-.d/.d/
+.d/
 
 # test
 bazel-*
