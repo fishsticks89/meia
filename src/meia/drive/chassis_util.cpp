@@ -1,18 +1,18 @@
-
-#include "main.h"
+#include <cmath>
+#include <utility>
+#include <string>
 namespace meia {
     // cos but degrees
-    static const double degrees_to_radians = 0.01745329252;
-    static double dcos(double x) {
+    inline static const double degrees_to_radians = 0.01745329252;
+    inline static double dcos(double x) {
         return std::cos(x * degrees_to_radians);
     }
-
     // sin but degrees
-    static double dsin(double x) {
+    inline static double dsin(double x) {
         return std::sin(x * degrees_to_radians);
     }
 
-    double util_funcs::curve(double sample, double max, int antijerk_percent) {
+    inline double curve(double sample, double max, int antijerk_percent) {
         const double radius = antijerk_percent * ((max / (2 * (1 - dsin(45)))) / 100);
         if (sample < 0) {
             throw "out of bounds";
@@ -26,7 +26,7 @@ namespace meia {
             return max;
         }
     }
-    double util_funcs::get_curve_distance(double increment, double max, double antijerk_percent) {
+    inline double get_curve_distance(double increment, double max, double antijerk_percent) {
         if (increment <= 0)
             throw "too small dumbass";
         double total = 0;
@@ -44,7 +44,7 @@ namespace meia {
      *      the multiplier on the speed of the curve
      * \param 
      */
-    double util_funcs::get_curve_iterations(double increment, double max, double antijerk_percent) {
+    inline int get_curve_iterations(double increment, double max, double antijerk_percent) {
         if (increment <= 0)
             throw "too small dumbass";
         double total = 0;
@@ -53,10 +53,10 @@ namespace meia {
             total += curve(i, max, antijerk_percent);
             i += increment;
         }
-        return i / increment;
+        return i / increment - 1;
     }
 
-    std::pair<double, std::pair<double, double>> util_funcs::pid(double current, double target, double p, double i, double d, std::pair<double, double> prev, int delta_time) {
+    inline std::pair<double, std::pair<double, double>> pid(double current, double target, double p, double i, double d, std::pair<double, double> prev, int delta_time) {
         // p constant is translated into correction
         double p_correct = target - current;
         // new integral and prev error is calculated
@@ -70,11 +70,11 @@ namespace meia {
         return {error / delta_time, {new_prev_error, new_i}};
     }
 
-    int util_funcs::sgn(int input) {
+    inline int sgn(int input) {
         return (input > 0) ? 1 : -1;
     }
 
-    std::pair<double, double> util_funcs::normalize(double l_volt, double r_volt, double max) {
+    inline std::pair<double, double> normalize(double l_volt, double r_volt, double max) {
         double l_dif = (std::abs(l_volt) > max) ? std::abs(l_volt) - max : 0;
         double r_dif = (std::abs(r_volt) > max) ? std::abs(r_volt) - max : 0;
         // scale down the voltages similarly if one is over 127
@@ -85,17 +85,17 @@ namespace meia {
         return {l_out, r_out};
     }
 
-    std::string tokenize(std::string s, std::string del = " ") {
+    inline std::string tokenize(std::string s, std::string del = " ") {
         int start = 0;
         int end = s.find(del);
         return s.substr(start, end);
     }
 
-    std::string util_funcs::dub_to_string(double d) {
+    inline std::string dub_to_string(double d) {
         return (tokenize(std::to_string(d), "."));
     }
 
-    double util_funcs::get_dist(bool left, double current, double target) {
+    inline double get_dist(bool left, double current, double target) {
         if (target < current)
             return target - current;
         else if (left)

@@ -33,10 +33,10 @@ namespace meia {
                      * \param drive_task_delay_factor
                      *      how many milliseconds the drive waits
                      */
-                    Pid_task_messenger_struct(Chassis* chassis_ptr, Pid pid, double ticks_per_inch, int drive_task_delay_factor)
+                    Pid_task_messenger_struct(Chassis* chassis_ptr, Pid pid, double centidegrees_per_inch, int drive_task_delay_factor)
                         : chassis_ptr{chassis_ptr},
                           delta_time{drive_task_delay_factor},
-                          ticks_per_inch{ticks_per_inch},
+                          centidegrees_per_inch{centidegrees_per_inch},
                           p{pid.p},
                           i{pid.i},
                           d{pid.d} {
@@ -44,32 +44,30 @@ namespace meia {
                     Chassis* chassis_ptr; // a pointer to the chassis the task controls
                     pros::Mutex mutex;    // the mutex to hold while modifying data
                     int delta_time;
-                    double ticks_per_inch;   // motor.get_position()/inch
-                    double p;                // the Proportional gain of the pid controller
-                    double i;                // Integral gain
-                    double d;                // Derivative gain
-                    double total_error;      // the total error experienced
-                    double left_target = 0;  // target in inches of the motor
-                    double right_target = 0; // target in inches of the motor
+                    double centidegrees_per_inch; // motor.get_position()/inch
+                    double p;                     // the Proportional gain of the pid controller
+                    double i;                     // Integral gain
+                    double d;                     // Derivative gain
+                    double total_error;           // the total error experienced
+                    double left_target = 0;       // target in inches of the motor
+                    double right_target = 0;      // target in inches of the motor
                     bool reset = true;
             };
             Pid_task_messenger_struct pid_task_messenger; // an instance of the pid task messenger struct used to commuicate with the pid task
             Chassis chassis;                              // the chassis the controller controls
             pros::Task pid_loop_task;                     // the task that controlls the chassis
             static void pid_loop(void* p);                // the function the task uses to control the chassis
-            static util_funcs util;
 
         public:
             explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, Pid pid, int delay_time = 5)
                 : chassis(left_motors, right_motors),
                   pid_task_messenger(&chassis, pid, (
-                                                        // ticks per inch
-                                                        ((50 * (3600 / motor_rpm)) * gear_ratio) // Ticks per revolution
-                                                        / (wheel_diameter * M_PI)                // Circumference of wheel
+                                                        // centidegrees per inch
+                                                        (motor_rpm * gear_ratio)  // Ticks per revolution
+                                                        / (wheel_diameter * M_PI) // Circumference of wheel
                                                         ),
                       delay_time),
-                    pid_loop_task(pid_loop, &pid_task_messenger, "pid_task")
-                {};
+                  pid_loop_task(pid_loop, &pid_task_messenger, "pid_task"){};
             // a function to change the targets of the pid task
             void change_target(double l, double r);
             // a function to change the correctional constants on the controller for the drive

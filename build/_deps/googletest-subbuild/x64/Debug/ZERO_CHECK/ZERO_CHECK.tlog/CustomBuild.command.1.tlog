@@ -1,0 +1,10 @@
+^C:\USERS\EBARR_2Y3VYLA\DESKTOP\CODING\C++\MEIA\MEIA\BUILD\_DEPS\GOOGLETEST-SUBBUILD\CMAKEFILES\E0E3C8E7B671767CDC97970C062DA3B9\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/ebarr_2y3vyla/Desktop/Coding/C++/meia/meia/build/_deps/googletest-subbuild -BC:/Users/ebarr_2y3vyla/Desktop/Coding/C++/meia/meia/build/_deps/googletest-subbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/ebarr_2y3vyla/Desktop/Coding/C++/meia/meia/build/_deps/googletest-subbuild/googletest-populate.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

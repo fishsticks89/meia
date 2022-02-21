@@ -1,15 +1,24 @@
 {
     "configurations": [
-      {
-        "name": "Windows",
-        "intelliSenseMode": "clang-x64",
-        "includePath": ["${env:PROS_TOOLCHAIN}/arm-none-eabi/include", "${env:PROS_TOOLCHAIN}/lib/gcc/arm-none-eabi/6.3.1/include", "${workspaceRoot}", "${workspaceRoot}/include"],
-        "browse": {
-          "path": ["${workspaceFolder}"],
-          "limitSymbolsToIncludedHeaders": true,
-          "databaseFilename": ""
+        {
+            "name": "Windows",
+            "intelliSenseMode": "clang-x64",
+            "includePath": [
+                "${env:PROS_TOOLCHAIN}/arm-none-eabi/include",
+                "${env:PROS_TOOLCHAIN}/lib/gcc/arm-none-eabi/6.3.1/include",
+                "${workspaceRoot}",
+                "${workspaceRoot}/include",
+                "C:/Users/ebarr_2y3vyla/_bazel_ebarr_2y3vyla/4ix32jfo/external/com_google_googletest/googletest/include"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
-      }
     ],
     "version": 4
-  }
+}

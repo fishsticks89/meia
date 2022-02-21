@@ -1,4 +1,3 @@
-#include "logo.cpp"
 #include "main.h"
 #include "pros/colors.h"
 namespace meia {
@@ -16,27 +15,28 @@ namespace meia {
         if (width < height)
             throw "buttonwidth must be greater than buttonheight"; // height must be less than width
         pros::screen::set_pen(maincolor);
-        pros::screen::fill_circle(480/2 + width/2 + xoffset, yoffset, height/2);
-        pros::screen::fill_circle(480/2 - width/2 + xoffset, yoffset, height/2);
+        pros::screen::fill_circle(480 / 2 + width / 2 + xoffset, yoffset, height / 2);
+        pros::screen::fill_circle(480 / 2 - width / 2 + xoffset, yoffset, height / 2);
         pros::screen::fill_rect(
-            480/2 - width/2 + xoffset, 
-            height/2 + yoffset, 
-            480/2 + width/2 + xoffset, 
-            -height/2 + yoffset);
+            480 / 2 - width / 2 + xoffset,
+            height / 2 + yoffset,
+            480 / 2 + width / 2 + xoffset,
+            -height / 2 + yoffset);
     }
     void Console::render() {
         clear();
         int logindex;
         // console stuff
-        const int lines = 6;
-        for (int i = lines; i >= 0; i--) {
-            logindex = (lines - i);
+        static const int lines = 6;
+        for (int i = logs.size() - lines; i <= logs.size(); i++) {
+            logindex = (i);
+            const int line = (logs.size() - i);
             if (logs.size() > logindex) {
                 pros::screen::set_pen(maincolor);
-                pros::screen::print(pros::E_TEXT_MEDIUM, lineheight, (i * lineheight) - 7, logs.at(logindex).first.c_str());
+                pros::screen::print(pros::E_TEXT_MEDIUM, lineheight, (line * lineheight) - 7, logs.at(logindex).first.c_str());
                 if (logs.at(logindex).second) {
                     pros::screen::set_pen(accentcolor);
-                    pros::screen::draw_line(lineheight, (i * lineheight) + breaklineoffset, 480 - lineheight, (i * lineheight) + breaklineoffset);
+                    pros::screen::draw_line(lineheight, (line * lineheight) + breaklineoffset, 480 - lineheight, (line * lineheight) + breaklineoffset);
                 }
             }
         }
@@ -81,8 +81,48 @@ namespace meia {
         logo();
         return 1;
     }
-    int Console::print() {
+
+    // static std::vector<std::string> split(std::string s, std::string del = "\n") {
+    //     int end = s.find(del);
+    //     if (end < 0)
+    //         return {s};
+    //     std::vector<std::string> step = split(s.substr(end, s.length()));
+    //     step.insert(step.begin(), s.substr(0, end));
+    //     return step;
+    // }
+
+    // static std::vector<std::pair<std::string, bool>> to_message(std::vector<std::string> arr) {
+    //     std::vector<std::pair<std::string, bool>> it = {};
+    //     const int num = arr.size();
+    //     for (int i = 0; i < num; i++) {
+    //         it.push_back({arr[i], false});
+    //     }
+    //     it.push_back({arr[num], true});
+    //     return it;
+    // }
+
+    int Console::log(std::string val) {
+        std::pair<std::string, bool> message = {val, true}; // to_message(split(val, "\n"));
+        logs.push_back(message);
         render();
         return 1;
+    }
+
+    // void Console::register_callback(pros::touch_event_cb_fn_t callback) {
+    //     pros::screen::touch_callback(callback, pros::E_TOUCH_PRESSED);
+    // }
+
+    x_y_button_e Console::to_button(int x, int y) {
+        if (y < 200) {
+            return body;
+        } else {
+            if (x < 100) {
+                return left;
+            } else if (x < 300) {
+                return center;
+            } else {
+                return right;
+            }
+        }
     }
 } // namespace meia

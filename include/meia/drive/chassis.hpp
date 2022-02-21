@@ -13,8 +13,6 @@ namespace meia {
             std::vector<int> right_motors;
             static std::vector<int>* p_left_motors;
             static std::vector<int>* p_right_motors;
-            // Utility functions
-            static util_funcs util;
 
         public:
             explicit Chassis(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports)

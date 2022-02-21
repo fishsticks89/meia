@@ -1,13 +1,14 @@
 #include "main.h"
+#include "chassis_util.cpp"
 namespace meia {
     //! Motor Functions
     void
     Chassis::set_voltage(std::pair<int, int> voltages) {
         for (int i : left_motors) {
-            pros::c::motor_move_voltage(std::abs(i), util.sgn(i) * voltages.first * (12000.0 / 127.0));
+            pros::c::motor_move_voltage(std::abs(i), sgn(i) * voltages.first * (12000.0 / 127.0));
         }
         for (int i : right_motors) {
-            pros::c::motor_move_voltage(std::abs(i), util.sgn(i) * voltages.second * (12000.0 / 127.0));
+            pros::c::motor_move_voltage(std::abs(i), sgn(i) * voltages.second * (12000.0 / 127.0));
         }
     }
 
@@ -26,8 +27,8 @@ namespace meia {
     std::pair<double, double>
     Chassis::get_motor_positions() {
         return {
-        util.sgn(left_motors[0]) * pros::c::motor_get_position(abs(left_motors[0])), 
-        util.sgn(right_motors[0]) * pros::c::motor_get_position(abs(right_motors[0]))
+        sgn(left_motors[0]) * pros::c::motor_get_position(abs(left_motors[0])), 
+        sgn(right_motors[0]) * pros::c::motor_get_position(abs(right_motors[0]))
         };
     }
 
