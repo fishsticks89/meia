@@ -93,8 +93,8 @@ namespace meia {
                     bool reset = false;
                     bool imu_calibrating = false;
                     bool imu_calibrated = false;
-                    Movement current;
-                    Movement next;
+                    std::shared_ptr<Movement> current = std::make_shared<Movement>();
+                    std::shared_ptr<Movement> next = std::make_shared<Movement>();
                     /**
                      * Struct used to pass messages to pid_task
                      * \param chassis_ptr
@@ -109,9 +109,7 @@ namespace meia {
                           imu{imu},
                           p{pid.p},
                           i{pid.i},
-                          d{pid.d},
-                          current(),
-                          next() {
+                          d{pid.d} {
                     }
             };
             Profiling_task_messenger_struct profiling_task_messenger; // an instance of the pid task messenger struct used to commuicate with the pid task

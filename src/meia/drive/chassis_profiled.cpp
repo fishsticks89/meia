@@ -74,9 +74,9 @@ namespace meia {
         std::cout << "yep";
         profile_loop_task.suspend();
         std::cout << "yep";
-        profiling_task_messenger.current = Movement();
+        profiling_task_messenger.current = std::make_shared<Movement>();
         std::cout << "yep";
-        profiling_task_messenger.next = Movement();
+        profiling_task_messenger.next = std::make_shared<Movement>();
         std::cout << "yep";
         profiling_task_messenger.total_error = 0;
         std::cout << "yep";
@@ -142,7 +142,7 @@ namespace meia {
         bool break_allowed = false;
         while (!break_allowed) {
             profiling_task_messenger.mutex.take(3000);
-            break_allowed = profiling_task_messenger.next.type() == none;
+            break_allowed = profiling_task_messenger.next->type() == none;
             profiling_task_messenger.mutex.give();
             // std::cout << "move_req - waiting for allowed" << std::endl;
             if (!break_allowed)
@@ -152,11 +152,11 @@ namespace meia {
         int id = pros::millis();
         std::cout << "move_req - injecting >> " << id << std::endl;
         if (type == advance) {
-            profiling_task_messenger.next = Drive::Advance(distance, start_acc, max_speed, end_acc, delay_time, id);
-            std::cout << "Next ID: " << profiling_task_messenger.next.get_id() << std::endl;
-            std::cout << "Next Type: " << profiling_task_messenger.next.type() << std::endl;
-            std::cout << "Current ID: " << profiling_task_messenger.current.get_id() << std::endl;
-            std::cout << "Current Type: " << profiling_task_messenger.current.type() << std::endl;
+            profiling_task_messenger.next = std::make_shared<Drive::Advance>(distance, start_acc, max_speed, end_acc, delay_time, id);
+            std::cout << "Next ID: " << profiling_task_messenger.next->get_id() << std::endl;
+            std::cout << "Next Type: " << profiling_task_messenger.next->type() << std::endl;
+            std::cout << "Current ID: " << profiling_task_messenger.current->get_id() << std::endl;
+            std::cout << "Current Type: " << profiling_task_messenger.current->type() << std::endl;
         }
         profiling_task_messenger.mutex.give();
         // waits for movement to begin
@@ -164,14 +164,14 @@ namespace meia {
         while (!break_allowed) {
             profiling_task_messenger.mutex.take(3000);
             // std::cout << "move_req - awiatign begin >> " << id << std::endl;
-            break_allowed = profiling_task_messenger.current.get_id() == id;
+            break_allowed = profiling_task_messenger.current->get_id() == id;
             // std::cout << "move_req - current move: >> " << profiling_task_messenger.current.get_id() << std::endl;
             profiling_task_messenger.mutex.give();
             if (!break_allowed)
                 pros::delay(10);
         }
         std::cout << "move_req - dun" << std::endl;
-        std::cout << profiling_task_messenger.current.get_id() << std::endl;
+        std::cout << profiling_task_messenger.current->get_id() << std::endl;
 
         return;
     }
@@ -222,10 +222,10 @@ namespace meia {
             // std::cout << "current: " << io->current.get_id() << std::endl;
             // std::cout << "next: " << io->next.get_id() << std::endl;
 
-            if ((io->current.get_increment(info.profiling.i).delta_advance == 0 && io->current.get_increment(info.profiling.i).delta_turn == 0) || io->current.type() == none || io->current.get_id() == 0) {
+            if ((io->current->get_increment(info.profiling.i).delta_advance == 0 && io->current->get_increment(info.profiling.i).delta_turn == 0) || io->current->type() == none || io->current->get_id() == 0) {
                 // std::cout<<"operating!\n";
                 io->current = io->next;
-                io->next = Movement();
+                io->next = std::make_shared<Movement>();
                 info.profiling.i = 0;
             }
 
@@ -233,11 +233,11 @@ namespace meia {
             info.turn.imu_reading = io->imu->get_euler().yaw; // reads in global z axis from imu
 
             //! Motion Profiling Stuff
-            const FramalIncrement increment = io->current.get_increment(info.profiling.i);
+            const FramalIncrement increment = io->current->get_increment(info.profiling.i);
             info.change_target = {increment.delta_advance, increment.delta_advance};
             info.profiling.i++;
 
-            if (io->current.type() != none) {
+            if (io->current->type() != none) {
                 //! Turn Pid Stuff
                 if (!io->imu_calibrated)
                     throw "imu not calibrated";
