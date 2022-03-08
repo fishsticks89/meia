@@ -1,5 +1,5 @@
-#include "main.h"
 #include "chassis_util.cpp"
+#include "main.h"
 namespace meia {
     //! inherited from Chassis
     void ChassisController::tank_control(pros::Controller con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity, int deadzone) {
@@ -90,6 +90,7 @@ namespace meia {
         int delta_time = io->delta_time;
         if (!(30 >= io->delta_time <= 5)) // throws an error if people ask for over 30 millis of delay time
             throw "delay_time is measured in milliseconds and can only be 5 - 30";
+
         struct pid_info_struct {
                 pid_info_struct(double p, double i, double d)
                     : left_pid(p, i, d), right_pid(p, i, d){};
@@ -103,6 +104,7 @@ namespace meia {
                     std::pair<double, double> pid_correct = {0, 0};
                 }
         } pid_info(io->p, io->i, io->d);
+
         (*(Pid_task_messenger_struct*)p).mutex.give(); // returns the mutex
         while (true) {
             io->mutex.take(3000);
@@ -117,10 +119,10 @@ namespace meia {
             pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target * io->centidegrees_per_inch - pid_info.motor_positions.first) / io->delta_time;
             pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target * io->centidegrees_per_inch - pid_info.motor_positions.second) / io->delta_time;
 
-            std::cout << "pid - targeet: " << io->left_target << std::endl;
-            std::cout << "pid - tpi: " << io->centidegrees_per_inch << std::endl;
-            std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first) << std::endl;
-            std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
+            // std::cout << "pid - targeet: " << io->left_target << std::endl;
+            // std::cout << "pid - tpi: " << io->centidegrees_per_inch << std::endl;
+            // std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first) << std::endl;
+            // std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
             io->chassis_ptr->set_voltage(normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127));
             io->mutex.give();
 

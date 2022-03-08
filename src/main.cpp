@@ -1,41 +1,30 @@
 #include "main.h"
 bool dev = false; // false if working on real robot
 pros::Controller con(pros::E_CONTROLLER_MASTER);
-// meia::Drive dogo(
-//     // Driving
-//     {20, -17},             // left motor ports
-//     {-19, 18},             // right motor ports
-//     4.125,                 // wheel diameter (inches)
-//     200,                   // motor rpm
-//     2.333,                 // gear ratio
-//     meia::Pid(17.5, 0, 0), // Drive PID constants
+meia::Drive dogo(
+    // Driving
+    {20, -17},             // left motor ports
+    {-19, 18},             // right motor ports
+    4.125,                 // wheel diameter (inches)
+    200,                   // motor rpm
+    2.333,                 // gear ratio
+    meia::Pid(17.5, 0, 0), // Drive PID constants
 
-//     // Turning
-//     16,                 // IMU port
-//     meia::Pid(1, 0, 0), // Turn PID Constants
+    // Turning
+    16,                 // IMU port
+    meia::Pid(1, 0, 0), // Turn PID Constants
 
-//     // Options
-//     5 // delay time
-// );
+    // Options
+    5 // delay time
+);
 
-meia::Console console;
-
-void callback(int16_t x, int16_t y) {
-    // console.log("e");
-}
+// meia::Console console;
 
 void initialize() {
     pros::delay(600);
-    console.log("y");
-    pros::screen::touch_callback(callback, pros::E_TOUCH_PRESSED);
-    console.log("y");
-    pros::delay(1000);
-    console.log("y");
-    // console->log("E");
     std::cout << "we made it this far" << std::endl;
-    // dogo.init_imu(); // resets imu
+    dogo.init_imu(); // resets imu
     std::cout << "imu!" << std::endl;
-    pros::delay(10000);
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -44,7 +33,7 @@ void initialize() {
  */
 void disabled() {
     std::cout << "disbale?????" << std::endl;
-    // dogo.end();
+    dogo.end();
 }
 
 /**
@@ -73,24 +62,8 @@ void competition_initialize() {
 void autonomous() {
     std::cout << "auton!" << std::endl;
     pros::delay(200);
-    // dogo.tare();
+    dogo.tare();
     // pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
-    // std::cout << "start: " << std::endl;
-    // dogo.move(
-    //     meia::drive, // the action to take (turn/drive)
-    //     30,          // the total distance to go (in)
-    //     1,           // The speed to go at max (1 inch per second)
-    //     meia::Curve( // accel curve
-    //         1,       // max acceleration (in/sec^2 ; zero if no curve)
-    //         0,       // the speed to accelerate from (0 in/sec)
-    //         15       // anti-jerk percent, the percent of the curve that is rounded
-    //         ),
-    //     meia::Curve( // decel curve
-    //         1,       // max deceleration in in/sec^2
-    //         0,       // the speed to decelerate to (0.5 in/sec)
-    //         15       // anti-jerk percent, the percent of the curve that is rounded
-    //         ));
-    std::cout << "end: ";
     pros::delay(8000);
 }
 
@@ -104,8 +77,16 @@ void autonomous() {
  */
 void opcontrol() {
     std::cout << "op!" << std::endl;
-    while (true) {
-        // dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
-        pros::delay(5);
-    }
+    // while (true) {
+    //     dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
+    //     pros::delay(5);
+    // }
+    std::cout << "start: " << std::endl;
+    dogo.move(
+        meia::advance, // the action to take (turn/advance)
+        30,            // the total distance to go (in)
+        1,             // The speed to go at max (1 inch per second)
+        1,
+        1);
+    std::cout << "end: ";
 }
