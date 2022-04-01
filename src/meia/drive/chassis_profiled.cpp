@@ -78,10 +78,10 @@ namespace meia {
         std::cout << "yep";
         profiling_task_messenger.next = std::make_shared<Movement>();
         std::cout << "yep";
-        profiling_task_messenger.total_error = 0;
+        // profiling_task_messenger.total_error = 0;
         std::cout << "yep";
         profiling_task_messenger.reset = true;
-        profiling_task_messenger.chassis_ptr->end();
+        profiling_task_messenger.chassis_ptr->tare();
         std::cout << "yep" << std::endl;
         profiling_task_messenger.imu->tare();
         profiling_task_messenger.mutex.give();
@@ -130,12 +130,12 @@ namespace meia {
         profiling_task_messenger.mutex.give();
     }
     //! PID telemetry
-    double Drive::get_turn_total_error() {
-        profiling_task_messenger.mutex.take(10000);
-        double total_error = profiling_task_messenger.total_error;
-        profiling_task_messenger.mutex.give();
-        return total_error;
-    }
+    // double Drive::get_turn_total_error() {
+    //     profiling_task_messenger.mutex.take(10000);
+    //     // double total_error = profiling_task_messenger.total_error;
+    //     profiling_task_messenger.mutex.give();
+    //     return total_error;
+    // }
 
     /* MovementTelemetry */ void Drive::move(move_type_e type, double distance, double max_speed, double start_acc, double end_acc) {
         profile_loop_task.resume();

@@ -15,7 +15,7 @@ namespace meia {
         pid_task_messenger.mutex.give();
         return temps;
     }
-    void ChassisController::tare() {
+    void ChassisController::init_imu() {
         pid_task_messenger.mutex.take(10000);
         pid_loop_task.suspend();
         pid_task_messenger.total_error = 0;
@@ -26,8 +26,8 @@ namespace meia {
         pid_task_messenger.mutex.give();
     }
 
-    void ChassisController::end() {
-        tare();
+    void ChassisController::tare() {
+        init_imu();
     }
     //! Set PID
     void ChassisController::change_target(double l, double r) {

@@ -78,7 +78,7 @@ namespace meia {
             void tank_control(pros::Controller con = pros::Controller(pros::E_CONTROLLER_MASTER), pros::motor_brake_mode_e_t brake_mode = pros::E_MOTOR_BRAKE_COAST, double curve_intensity = 0, int deadzone = 0);
             std::pair<std::vector<double>, std::vector<double>> get_motor_temps();
             void set_drive_brake(pros::motor_brake_mode_e_t input);
+            void init_imu();
             void tare();
-            void end();
     };
 } // namespace meia

@@ -53,8 +53,8 @@ namespace meia {
                     };
                     /**
                      * A function to get the increment for the rotational and directional target for the profiled chassis
-                     *      \param iter
-                     *          the iterations into the movement (must start at one)
+                     * \param iter
+                     *      the iterations into the movement (must start at one)
                      */
                     virtual FramalIncrement get_increment(int iter) {
                         return FramalIncrement(0, 0);
@@ -81,18 +81,14 @@ namespace meia {
             };
 
             struct Profiling_task_messenger_struct {
-                    ChassisController* chassis_ptr; // a pointer to the chassis the task controls
-                    pros::Imu* imu;                 // the imu to use for course correction
-                    pros::Mutex mutex;              // the mutex to hold while modifying data
-                    int delta_time;
-                    double max_speed;   // motor.get_position()/inch
-                    double p;           // the Proportional gain of the pid controller
-                    double i;           // Integral gain
-                    double d;           // Derivative gain
-                    double total_error; // the total error experienced
-                    bool reset = false;
-                    bool imu_calibrating = false;
-                    bool imu_calibrated = false;
+                    ChassisController* chassis_ptr;               // a pointer to the chassis the task controls
+                    pros::Imu* imu;                               // the imu to use for course correction
+                    pros::Mutex mutex;                            // the mutex to hold while modifying data
+                    int delta_time;                               // the delay time of the chassis_profiled
+                    double max_speed;                             // motor.get_position()/inch
+                    double p, i, d;                               // the constants of the turn pid controller
+                    bool reset = false;                           // true if the profiling task messenger needs to reset
+                    bool imu_calibrating, imu_calibrated = false; // telem bools
                     std::shared_ptr<Movement> current = std::make_shared<Movement>();
                     std::shared_ptr<Movement> next = std::make_shared<Movement>();
                     /**
@@ -115,8 +111,8 @@ namespace meia {
             Profiling_task_messenger_struct profiling_task_messenger; // an instance of the pid task messenger struct used to commuicate with the pid task
             ChassisController chassis;                                // the chassis the controller controls
             pros::Task profile_loop_task;                             // the task that controlls the chassis
-            pros::Imu imu;
-            static void pid_loop(void* p); // the function the task uses to control the chassis
+            pros::Imu imu;                                            // imu for rotation correction
+            static void pid_loop(void* p);                            // the function the task uses to control the chassis
             /**
              * a function to get how far a turn needs to be
              * \param direction
@@ -134,7 +130,7 @@ namespace meia {
                       delay_time),
                   profile_loop_task(pid_loop, &profiling_task_messenger, "profiling_task"),
                   delay_time(delay_time){};
-            // gets if the imu is calibrating
+            // // // // gets if the imu is calibrating
             // a function to change the correctional constants on the controller for the drive
             void set_drive_pid_constants(double p, double i, double d);
             // a function to change the correctional constants on the controller for the drive

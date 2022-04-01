@@ -1,7 +1,6 @@
 #include "main.h"
-bool dev = false; // false if working on real robot
 pros::Controller con(pros::E_CONTROLLER_MASTER);
-meia::Drive dogo(
+meia::ChassisController dogo(
     // Driving
     {20, -17},             // left motor ports
     {-19, 18},             // right motor ports
@@ -10,9 +9,9 @@ meia::Drive dogo(
     2.333,                 // gear ratio
     meia::Pid(17.5, 0, 0), // Drive PID constants
 
-    // Turning
-    16,                 // IMU port
-    meia::Pid(1, 0, 0), // Turn PID Constants
+    // // Turning
+    // 16,                 // IMU port
+    // meia::Pid(1, 0, 0), // Turn PID Constants
 
     // Options
     5 // delay time
@@ -33,7 +32,7 @@ void initialize() {
  */
 void disabled() {
     std::cout << "disbale?????" << std::endl;
-    dogo.end();
+    dogo.tare();
 }
 
 /**
@@ -76,17 +75,19 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-    std::cout << "op!" << std::endl;
+    // std::cout << "op!" << std::endl;
     // while (true) {
     //     dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
     //     pros::delay(5);
     // }
     std::cout << "start: " << std::endl;
-    dogo.move(
-        meia::advance, // the action to take (turn/advance)
-        30,            // the total distance to go (in)
-        1,             // The speed to go at max (1 inch per second)
-        1,
-        1);
+    // dogo.move(
+    //     meia::advance, // the action to take (turn/advance)
+    //     30,            // the total distance to go (in)
+    //     1,             // The speed to go at max (1 inch per second)
+    //     1,
+    //     1);
+    dogo.tare();
+    dogo.change_target(0.1, 0.1);
     std::cout << "end: ";
 }
