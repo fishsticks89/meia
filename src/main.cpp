@@ -1,9 +1,9 @@
 #include "main.h"
 pros::Controller con(pros::E_CONTROLLER_MASTER);
-meia::ChassisController dogo(
+meia::ChassisController drive(
     // Driving
-    {20, -17},             // left motor ports
-    {-19, 18},             // right motor ports
+    {-2, -3, -4},          // left motor ports
+    {7, 8, 10},            // right motor ports
     4.125,                 // wheel diameter (inches)
     200,                   // motor rpm
     2.333,                 // gear ratio
@@ -17,77 +17,43 @@ meia::ChassisController dogo(
     5 // delay time
 );
 
-// meia::Console console;
+
 
 void initialize() {
     pros::delay(600);
-    std::cout << "we made it this far" << std::endl;
-    dogo.init_imu(); // resets imu
-    std::cout << "imu!" << std::endl;
+    setupMotors();
+    drive.init_imu(); // resets imu
 }
-/**
- * Runs while the robot is in the disabled state of Field Management System or
- * the VEX Competition Switch, following either autonomous or opcontrol. When
- * the robot is enabled, this task will exit.
- */
+
 void disabled() {
-    std::cout << "disbale?????" << std::endl;
-    dogo.tare();
+    drive.tare();
 }
 
-/**
- * Runs after initialize(), and before autonomous when connected to the Field
- * Management System or the VEX Competition Switch. This is intended for
- * competition-specific initialization routines, such as an autonomous selector
- * on the LCD.
- *
- * This task will exit when the robot is enabled and autonomous or opcontrol
- * starts.
- */
 void competition_initialize() {
+
 }
 
-/**
- * Runs the user autonomous code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the autonomous
- * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes.
- *
- * If the robot is disabled or communications is lost, the autonomous task
- * will be stopped. Re-enabling the robot will restart the task, not re-start it
- * from where it left off.
- */
 void autonomous() {
-    std::cout << "auton!" << std::endl;
-    pros::delay(200);
-    dogo.tare();
-    // pros::lcd::set_text(4, std::to_string(dogo.get_motor_temps().first[0]));
-    pros::delay(8000);
+    drive.tare();
 }
 
-/**
- * If no competition control is connected, this function will run immediately
- * following initialize(), otherwise it will run after opcontrol is enabled on the field switch.
- *
- * If the robot is disabled or communications is lost, the
- * operator control task will be stopped. Re-enabling the robot will restart the
- * task, not resume it from where it left off.
- */
 void opcontrol() {
-    // std::cout << "op!" << std::endl;
-    // while (true) {
-    //     dogo.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3);
-    //     pros::delay(5);
-    // }
-    std::cout << "start: " << std::endl;
-    // dogo.move(
-    //     meia::advance, // the action to take (turn/advance)
-    //     30,            // the total distance to go (in)
-    //     1,             // The speed to go at max (1 inch per second)
-    //     1,
-    //     1);
-    dogo.tare();
-    dogo.change_target(0.1, 0.1);
-    std::cout << "end: ";
+    ControlScheme control(&con);
+    control.addDirectional(
+        {pros::E_CONTROLLER_DIGITAL_L1, pros::E_CONTROLLER_DIGITAL_L2}, 
+        []() { lift.move_voltage(12000); }, 
+        []() { lift.move_voltage(-12000); }, 
+        []() { lift.move_voltage(0); }
+    );
+    control.addDirectional(
+        {pros::E_CONTROLLER_DIGITAL_R1, pros::E_CONTROLLER_DIGITAL_R2}, 
+        []() { take.move_voltage(12000); }, 
+        []() { take.move_voltage(-12000); }, 
+        []() { take.move_voltage(0); }
+    );
+    while (true) {
+        control();
+        drive.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3.2); // controller, brake mode, curve intensity
+        pros::delay(5);
+    }
 }
