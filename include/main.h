@@ -76,7 +76,9 @@ void opcontrol(void);
  */
 //#include <iostream>
 #include "controlutil.hpp"
+#include "pneumaticutil.hpp"
 #include "motors.hpp"
+
 #endif
 
 #endif  // _PROS_MAIN_H_

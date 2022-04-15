@@ -115,13 +115,14 @@ class ControlScheme {
         }
         for (auto directional : directionals) {
             auto pressing = directional.first();
-            if (pressing.first == true) {
+
+            if (pressing.first) {
                 directional.second.first_pressing();
             }
-            if (pressing.second == true) {
+            if (pressing.second) {
                 directional.second.second_pressing();
             }
-            if (pressing == std::pair<bool, bool>{false, false}) {
+            if (!pressing.first && !pressing.second) {
                 directional.second.not_pressing();
             }
         }

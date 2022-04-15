@@ -17,8 +17,6 @@ meia::ChassisController drive(
     5 // delay time
 );
 
-
-
 void initialize() {
     pros::delay(600);
     setupMotors();
@@ -30,7 +28,6 @@ void disabled() {
 }
 
 void competition_initialize() {
-
 }
 
 void autonomous() {
@@ -40,17 +37,18 @@ void autonomous() {
 void opcontrol() {
     ControlScheme control(&con);
     control.addDirectional(
-        {pros::E_CONTROLLER_DIGITAL_L1, pros::E_CONTROLLER_DIGITAL_L2}, 
-        []() { lift.move_voltage(12000); }, 
-        []() { lift.move_voltage(-12000); }, 
-        []() { lift.move_voltage(0); }
+        {pros::E_CONTROLLER_DIGITAL_L1, pros::E_CONTROLLER_DIGITAL_L2},
+        []() { lift.move_voltage(12000); },  // if first button is pressing
+        []() { lift.move_voltage(-12000); }, // if second button is pressing
+        []() { lift.move_voltage(0); }       // if neither are pressing
     );
     control.addDirectional(
-        {pros::E_CONTROLLER_DIGITAL_R1, pros::E_CONTROLLER_DIGITAL_R2}, 
-        []() { take.move_voltage(12000); }, 
-        []() { take.move_voltage(-12000); }, 
-        []() { take.move_voltage(0); }
+        {pros::E_CONTROLLER_DIGITAL_R1, pros::E_CONTROLLER_DIGITAL_R2},
+        []() { take.move_voltage(12000); },  // if first button is pressing
+        []() { take.move_voltage(-12000); }, // if second button is pressing
+        []() { take.move_voltage(0); }       // if neither are pressing
     );
+    control.addToggleable(pros::E_CONTROLLER_DIGITAL_UP, clamp.set);
     while (true) {
         control();
         drive.tank_control(con, pros::E_MOTOR_BRAKE_COAST, 3.2); // controller, brake mode, curve intensity
