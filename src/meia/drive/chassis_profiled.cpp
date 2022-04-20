@@ -248,7 +248,7 @@ namespace meia {
 
             //! Output
             // std::cout << "prof - delta target: " << info.change_target.first << std::endl;
-            io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
+            io->chassis_ptr->change_target({info.change_target.first, info.change_target.second});
             // io->total_error += std::abs(info.turn.pid_hold.second.second) / (io->delta_time * 100000);
 
             // pros::lcd::set_text(5, "prof - imu_read: " + dub_to_string(info.turn.imu_reading) + " target: " + dub_to_string(info.turn.target));

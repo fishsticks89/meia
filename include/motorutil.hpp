@@ -13,5 +13,4 @@ class Motor {
         void set_voltage(int_fast32_t voltage) {
             motor.move_voltage(voltage * ((reversed - 0.5) * 2));
         }
-        void 
 };

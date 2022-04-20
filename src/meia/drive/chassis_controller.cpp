@@ -1,6 +1,10 @@
 #include "chassis_util.cpp"
 #include "main.h"
 namespace meia {
+    //! utility
+    int ChassisController::get_delay_time() {
+        return pid_task_messenger.delta_time;
+    }
     //! inherited from Chassis
     void ChassisController::tank_control(pros::Controller con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity, int deadzone) {
         pid_loop_task.suspend();
@@ -15,7 +19,7 @@ namespace meia {
         pid_task_messenger.mutex.give();
         return temps;
     }
-    void ChassisController::init_imu() {
+    void ChassisController::tare() {
         pid_task_messenger.mutex.take(10000);
         pid_loop_task.suspend();
         pid_task_messenger.total_error = 0;
@@ -26,11 +30,8 @@ namespace meia {
         pid_task_messenger.mutex.give();
     }
 
-    void ChassisController::tare() {
-        init_imu();
-    }
     //! Set PID
-    void ChassisController::change_target(double l, double r) {
+    void ChassisController::change_target(std::pair<double, double> deltatarget) {
         pid_task_messenger.mutex.take(3000);
         pid_task_messenger.chassis_ptr->set_drive_brake(pros::E_MOTOR_BRAKE_BRAKE);
         if (pid_task_messenger.reset == true) {
@@ -38,8 +39,8 @@ namespace meia {
             pid_task_messenger.right_target = chassis.get_motor_positions().second;
         }
         pid_loop_task.resume();
-        pid_task_messenger.left_target += l;
-        pid_task_messenger.right_target += r;
+        pid_task_messenger.left_target += deltatarget.first;
+        pid_task_messenger.right_target += deltatarget.second;
         pid_task_messenger.mutex.give();
     }
     void ChassisController::set_pid_constants(double p, double i, double d) {
@@ -116,13 +117,18 @@ namespace meia {
                 io->reset = false;
             }
 
-            pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target * io->centidegrees_per_inch - pid_info.motor_positions.first) / io->delta_time;
-            pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target * io->centidegrees_per_inch - pid_info.motor_positions.second) / io->delta_time;
+            pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target - (pid_info.motor_positions.first / io->ticks_per_inch));
+            pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target - (pid_info.motor_positions.second / io->ticks_per_inch));
 
-            // std::cout << "pid - targeet: " << io->left_target << std::endl;
-            // std::cout << "pid - tpi: " << io->centidegrees_per_inch << std::endl;
-            // std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first) << std::endl;
-            // std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
+            {
+                const int time = pros::millis();
+                if ((time - (time % delta_time)) % 1000 == 0) {
+                    std::cout << "pid - targeet: " << io->left_target << std::endl;
+                    std::cout << "pid - tpi: " << io->ticks_per_inch << std::endl;
+                    std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first) << std::endl;
+                    std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
+                }
+            }
             io->chassis_ptr->set_voltage(normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127));
             io->mutex.give();
 

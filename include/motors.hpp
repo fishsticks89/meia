@@ -4,4 +4,6 @@ extern pros::Motor lift;
 
 void setupMotors();
 
-Pneumatic clamp;
+extern Pneumatic clamp;
+extern Pneumatic mogo;
+extern Pneumatic shtick;

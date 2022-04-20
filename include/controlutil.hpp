@@ -1,11 +1,11 @@
 #include "main.h"
-using bn_fn = void (*)(void);
-using tog_fn = void (*)(bool);
+using void_fn = void (*)(void);
+using bool_fn = void (*)(bool);
 struct directional_fn {
-    bn_fn first_pressing;
-    bn_fn second_pressing;
-    bn_fn not_pressing;
-    directional_fn(bn_fn first_pressing, bn_fn second_pressing, bn_fn not_pressing): first_pressing(first_pressing), second_pressing(second_pressing), not_pressing(not_pressing) {}
+    void_fn first_pressing;
+    void_fn second_pressing;
+    void_fn not_pressing;
+    directional_fn(void_fn first_pressing, void_fn second_pressing, void_fn not_pressing): first_pressing(first_pressing), second_pressing(second_pressing), not_pressing(not_pressing) {}
 };
 
 class Button {
@@ -22,19 +22,19 @@ class Button {
          * If the button is being pressed and was not previously, returns true
          */
         bool operator()() {
-            if (con->get_digital(button) && !wasPressed) {
-                wasPressed = true;
-                return true;
-            } else if (!con->get_digital(button)) {
-                wasPressed = false;
+            bool returnval = false;
+            bool ispressing = con->get_digital(button);
+            if (ispressing && !wasPressed) {
+                returnval = true;
             }
-            return false;
+            wasPressed = ispressing;
+            return returnval;
         }
 };
 class Toggleable {
     private:
         Button pressing;
-        bool toggle = false;
+        bool toggle = true;
 
     public:
         Toggleable(pros::Controller* con, pros::controller_digital_e_t button)
@@ -86,35 +86,46 @@ class Directional {
 class ControlScheme {
     private:
     pros::Controller* con;
-    std::vector<std::pair<Button, bn_fn>> buttons = {};
-    std::vector<std::pair<Toggleable, tog_fn>> toggles = {};
-    std::vector<std::pair<Directional, directional_fn>> directionals = {};
+    std::vector<std::pair<Button*, void_fn>> buttons = {};
+    std::vector<std::pair<Toggleable*, bool_fn>> toggles = {};
+    std::vector<std::pair<Directional*, directional_fn>> directionals = {};
     public:
     ControlScheme(pros::Controller* con)
         : con(con) {
     }
-    void addButton(pros::controller_digital_e_t button, bn_fn function) {
-        buttons.push_back({Button(con, button), function});
+    ~ControlScheme() {
+        for (auto button : buttons) {
+            delete(button.first);
+        }
+        for (auto button : toggles) {
+            delete(button.first);
+        }
+        for (auto button : directionals) {
+            delete(button.first);
+        }
     }
-    void addToggleable(pros::controller_digital_e_t button, tog_fn function) {
-        toggles.push_back({Toggleable(con, button), function});
+    void addButton(pros::controller_digital_e_t button, void_fn function) {
+        buttons.push_back({new Button(con, button), function});
     }
-    void addDirectional(std::pair<pros::controller_digital_e_t, pros::controller_digital_e_t> buttons, bn_fn first_pressing, bn_fn second_pressing, bn_fn not_pressing) {
-        directionals.push_back({Directional(con, buttons.first, buttons.second), directional_fn(first_pressing, second_pressing, not_pressing)});
+    void addToggleable(pros::controller_digital_e_t button, bool_fn function) {
+        toggles.push_back({new Toggleable(con, button), function});
+    }
+    void addDirectional(std::pair<pros::controller_digital_e_t, pros::controller_digital_e_t> buttons, void_fn first_pressing, void_fn second_pressing, void_fn not_pressing) {
+        directionals.push_back({new Directional(con, buttons.first, buttons.second), directional_fn(first_pressing, second_pressing, not_pressing)});
     }
     void operator()() {
         for (auto button : buttons) {
-            if (button.first()) {
+            if ((*button.first)()) {
                 button.second();
             }
         }
         for (auto toggle : toggles) {
-            if (toggle.first()) {
-                toggle.second(toggle.first.getState());
+            if ((*toggle.first)()) {
+                toggle.second(toggle.first->getState());
             }
         }
         for (auto directional : directionals) {
-            auto pressing = directional.first();
+            auto pressing = (*directional.first)();
 
             if (pressing.first) {
                 directional.second.first_pressing();
