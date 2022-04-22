@@ -60,7 +60,7 @@ namespace meia {
     void Drive::tank_control(pros::Controller con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity, int deadzone) {
         profiling_task_messenger.mutex.take(10000);
         profile_loop_task.suspend();
-        profiling_task_messenger.chassis_ptr->tank_control(con, brake_mode, curve_intensity, deadzone);
+        profiling_task_messenger.chassis_ptr->tank_control(&con, brake_mode, curve_intensity, deadzone);
         profiling_task_messenger.mutex.give();
     }
     std::pair<std::vector<double>, std::vector<double>> Drive::get_motor_temps() {

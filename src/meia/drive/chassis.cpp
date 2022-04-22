@@ -63,10 +63,10 @@ namespace meia {
     }
 
     // Tank control
-    void Chassis::tank_control(pros::Controller con, double curve_intensity, int deadzone) {
+    void Chassis::tank_control(pros::Controller* con, double curve_intensity, int deadzone) {
         // Threshold if joysticks don't come back to perfect 0
-        if (std::abs(con.get_analog(ANALOG_LEFT_Y)) > deadzone || std::abs(con.get_analog(ANALOG_RIGHT_Y)) > deadzone) {
-            set_voltage({curve_function(con.get_analog(ANALOG_LEFT_Y), curve_intensity), curve_function(con.get_analog(ANALOG_RIGHT_Y), curve_intensity)});
+        if (std::abs(con->get_analog(ANALOG_LEFT_Y)) > deadzone || std::abs(con->get_analog(ANALOG_RIGHT_Y)) > deadzone) {
+            set_voltage({curve_function(con->get_analog(ANALOG_LEFT_Y), curve_intensity), curve_function(con->get_analog(ANALOG_RIGHT_Y), curve_intensity)});
         }
         // When joys are released, do nothing
         else {

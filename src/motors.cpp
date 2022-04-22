@@ -7,5 +7,6 @@ void setupMotors() {
 }
 
 Pneumatic clamp('A', false);
-Pneumatic mogo ('F', false);
-Pneumatic shtick ('D', false);
+Pneumatic mogo('F', false);
+Pneumatic shtick('D', false);
+Pneumatic hpost('G', false);

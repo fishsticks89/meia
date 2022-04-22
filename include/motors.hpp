@@ -7,3 +7,4 @@ void setupMotors();
 extern Pneumatic clamp;
 extern Pneumatic mogo;
 extern Pneumatic shtick;
+extern Pneumatic hpost;

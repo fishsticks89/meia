@@ -10,16 +10,28 @@ namespace meia {
         using profiling_fn_t = std::function<std::pair<double, double>(int, int)>;
 
         /**
-         * Executes a profiling function for a given time, and when completed
+         * Executes a profiling function for a given time, and when completed returns the avg error.
+         * @return avg error.
          */
-        void profile(ChassisController* chassis, profiling_fn_t profiling_fn, int time);
+        double profile(ChassisController* chassis, profiling_fn_t profiling_fn, int time);
 
         /**
          * Accelerates to a speed and decelerates at a given distance
          * @param amount dist in inches
          * @param speed the cruise speed in in/sec
          * @param acc acceleration
+         * @return avg error
          */
-        void go(ChassisController* chassis, int amount, int speed, int acc);
+        double go(ChassisController* chassis, double amount, double speed, double acc);
+
+        /**
+         * Accelerates to a speed and decelerates at a given angle
+         * @param amount dist in deg
+         * @param speed the cruise speed in deg/sec
+         * @param acc acceleration dec/sec^2
+         * @return avg error
+         */
+        double turn(ChassisController* chassis, double amount, double speed, double acc, double drive_width);
+        double debting_go(ChassisController* chassis, int amount, int speed, int decel);
     } // namespace p
 } // namespace meia

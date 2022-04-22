@@ -54,18 +54,18 @@ namespace meia {
                     bool reset = true;
             } pid_task_messenger;          // an instance of the pid task messenger struct used to commuicate with the pid task
             Chassis chassis;               // the chassis the controller controls
-            pros::Task pid_loop_task;      // the task that controlls the chassis
+            pros::Task pid_loop_task;      // the task that controls the chassis
             static void pid_loop(void* p); // the function the task uses to control the chassis
 
         public:
             explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, Pid pid, int delay_time = 5)
                 : chassis(left_motors, right_motors),
                   pid_task_messenger(&chassis, pid, (
-                                                        // ticks per revolution
+                                                        // ticks per revolution * interior gear ratio * exterior gear ratio
                                                         ((50.0 * (3600.0 / motor_rpm)) * gear_ratio) // with no cart, the encoder reads 50 counts per rotation
                                                         /
                                                         // inches per revolution
-                                                        (wheel_diameter * 3.14159265358979323846) // 2nd grade math
+                                                        (wheel_diameter * m_pi) // 2nd grade math
                                                         ),
                       delay_time),
                   pid_loop_task(pid_loop, &pid_task_messenger, "pid_task"){};
@@ -73,13 +73,15 @@ namespace meia {
             void change_target(std::pair<double, double> deltatarget);
             // a function to change the correctional constants on the controller for the drive
             void set_pid_constants(double p, double i, double d);
+            double get_p_constant();
             // a function to get the total error of the chassis
             double get_total_error();
             // expose functions from meia::Chassis
-            void tank_control(pros::Controller con = pros::Controller(pros::E_CONTROLLER_MASTER), pros::motor_brake_mode_e_t brake_mode = pros::E_MOTOR_BRAKE_COAST, double curve_intensity = 0, int deadzone = 0);
+            void tank_control(pros::Controller* con = new pros::Controller(pros::E_CONTROLLER_MASTER), pros::motor_brake_mode_e_t brake_mode = pros::E_MOTOR_BRAKE_COAST, double curve_intensity = 0, int deadzone = 0);
             std::pair<std::vector<double>, std::vector<double>> get_motor_temps();
             void set_drive_brake(pros::motor_brake_mode_e_t input);
             void tare();
             int get_delay_time();
+            std::pair<double, double> get_error();
     };
 } // namespace meia
