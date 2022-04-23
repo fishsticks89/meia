@@ -55,6 +55,11 @@ namespace meia {
         pid_task_messenger.d = d;
         pid_task_messenger.mutex.give();
     }
+    void ChassisController::allowderivative(bool allow) {
+        pid_task_messenger.mutex.take(10000);
+        pid_task_messenger.allowderivative = allow;
+        pid_task_messenger.mutex.give();
+    }
     //! PID telemetry
     double ChassisController::get_total_error() {
         pid_task_messenger.mutex.take(10000);
@@ -79,11 +84,11 @@ namespace meia {
                 accumulated_integral_error = 0;
                 prev_error = 0;
             }
-            double calc(double diff) {
+            double calc(double diff, bool allow_d) {
                 // new pid is calculated
                 const double p = diff;
-                const double i = accumulated_integral_error + diff;
-                const double d = prev_error - diff;
+                const double i = (allow_d) ? accumulated_integral_error + diff : 0;
+                const double d = (allow_d) ? prev_error - diff : 0;
                 // telem for next calc
                 prev_error = diff;
                 accumulated_integral_error += diff;
@@ -125,12 +130,12 @@ namespace meia {
                 io->reset = false;
             }
 
-            pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target - (pid_info.motor_positions.first / io->ticks_per_inch));
-            pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target - (pid_info.motor_positions.second / io->ticks_per_inch));
+            pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target - (pid_info.motor_positions.first / io->ticks_per_inch), io->allowderivative);
+            pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target - (pid_info.motor_positions.second / io->ticks_per_inch), io->allowderivative);
 
             // {
             //     const int time = pros::millis();
-            //     if ((time - (time % delta_time)) % 1000 == 0) {
+            //     if ((time - (time % delta_time)) % 200 == 0) {
             //         std::cout << "pid - targeet: " << io->left_target << std::endl;
             //         std::cout << "pid - tpi: " << io->ticks_per_inch << std::endl;
             //         std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first / io->ticks_per_inch) << std::endl;

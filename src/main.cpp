@@ -5,21 +5,23 @@ meia::ChassisController drive(
     // Driving
     {-2, -5, -4},          // left motor ports
     {7, 8, 10},            // right motor ports
-    2.75,                  // wheel diameter (inches)
+    2.7,                   // wheel diameter (inches)
     600,                   // motor rpm
-    2.333,                 // gear ratio
-    meia::Pid(200, 0, 0), // drive PID constants
+    (48.0 / 36.0),         // gear ratio
+    meia::Pid(200, 0, 90), // drive PID constants
 
     // Options
     5 // delay time
 );
+meia::Console console;
 
 void initialize() {
+    console.init();
     pros::screen::touch_callback([](int16_t x, int16_t y) { exit(0); }, pros::E_TOUCH_PRESSED);
     setupMotors();
     drive.tare();
-    pros::Task die ([](void* p) {
-        ControlScheme control (&con);
+    pros::Task die([](void* p) {
+        ControlScheme control(&con);
         control.addButton(pros::E_CONTROLLER_DIGITAL_UP, []() {
             exit(0);
         });
@@ -27,7 +29,8 @@ void initialize() {
             control();
             pros::delay(5);
         }
-    }, nullptr, "water");
+    },
+        nullptr, "water");
 }
 
 void disabled() {
@@ -43,8 +46,8 @@ void autonomous() {
 }
 
 void opcontrol() {
-    autonomous();
-    pros::delay(80000);
+    // autonomous();
+    // pros::delay(80000);
     // drive.tare();
     ControlScheme control(&con);
     control.addDirectional(
@@ -62,7 +65,7 @@ void opcontrol() {
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_R2, [](bool act) { clamp.set(act); }); // sets the clamp to toggled state
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_X, [](bool act) { mogo.set(act); });   // sets the mogo to toggled state
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_A, [](bool act) { shtick.set(act); }); // sets the shtick to toggled state
-    control.addToggleable(pros::E_CONTROLLER_DIGITAL_Y, [](bool act) { hpost.set(act); }); // sets the high post mech to toggled state
+    control.addToggleable(pros::E_CONTROLLER_DIGITAL_Y, [](bool act) { hpost.set(act); });  // sets the high post mech to toggled state
     while (true) {
         control();
         drive.tank_control(&con, pros::E_MOTOR_BRAKE_COAST, 3.2); // controller, brake mode, curve intensity

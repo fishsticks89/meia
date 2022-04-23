@@ -8,6 +8,13 @@ namespace meia {
          * @return the delta chassis targets
          */
         using profiling_fn_t = std::function<std::pair<double, double>(int, int)>;
+        /**
+         * A template to recieve a profiling function
+         * @param int the time into the movement in ms
+         * @param int the time since the last iteration
+         * @return true to continue the profile
+         */
+        using pf_until_fn_t = std::function<bool(int, int)>;
 
         /**
          * Executes a profiling function for a given time, and when completed returns the avg error.
@@ -32,6 +39,7 @@ namespace meia {
          * @return avg error
          */
         double turn(ChassisController* chassis, double amount, double speed, double acc, double drive_width);
-        double debting_go(ChassisController* chassis, int amount, int speed, int decel);
+        double debting_go(ChassisController* chassis, double amount, double speed, double decel);
+        double debting_turn(ChassisController* chassis, double amount, double speed, double decel, double drive_width);
     } // namespace p
 } // namespace meia

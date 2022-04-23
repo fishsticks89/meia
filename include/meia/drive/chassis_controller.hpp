@@ -52,6 +52,7 @@ namespace meia {
                     double left_target = 0;       // target in inches of the motor
                     double right_target = 0;      // target in inches of the motor
                     bool reset = true;
+                    bool allowderivative = true;
             } pid_task_messenger;          // an instance of the pid task messenger struct used to commuicate with the pid task
             Chassis chassis;               // the chassis the controller controls
             pros::Task pid_loop_task;      // the task that controls the chassis
@@ -61,12 +62,13 @@ namespace meia {
             explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, Pid pid, int delay_time = 5)
                 : chassis(left_motors, right_motors),
                   pid_task_messenger(&chassis, pid, (
-                                                        // ticks per revolution * interior gear ratio * exterior gear ratio
-                                                        ((50.0 * (3600.0 / motor_rpm)) * gear_ratio) // with no cart, the encoder reads 50 counts per rotation
-                                                        /
-                                                        // inches per revolution
-                                                        (wheel_diameter * m_pi) // 2nd grade math
-                                                        ),
+                    // ticks per revolution
+                    // ticks per internal gear revolution * interior gear ratio * exterior gear ratio
+                    ((50.0 * (3600.0 / motor_rpm)) * gear_ratio) // with no cart, the encoder reads 50 counts per rotation, 3600.0/motor_rpm is = internal_gear_ratio
+                    /
+                    // inches per revolution
+                    (wheel_diameter * m_pi) // 2nd grade math
+                    ),
                       delay_time),
                   pid_loop_task(pid_loop, &pid_task_messenger, "pid_task"){};
             // a function to change the targets of the pid task
@@ -82,6 +84,7 @@ namespace meia {
             void set_drive_brake(pros::motor_brake_mode_e_t input);
             void tare();
             int get_delay_time();
+            void allowderivative(bool allow);
             std::pair<double, double> get_error();
     };
 } // namespace meia

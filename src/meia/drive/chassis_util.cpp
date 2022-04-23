@@ -105,4 +105,8 @@ namespace meia {
         throw "internalerr";
     }
 
+    inline int get_fac(bool fac) {
+        return (2 * (fac - 0.5));
+    }
+
 } // namespace meia
