@@ -138,7 +138,7 @@ namespace meia {
             chassis->allowderivative(false);
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
-                    double increment = (speed / 1000.0) * delta_time;
+                    double increment = (speed_in / 1000.0) * delta_time;
                     const double overature = (getBigger(multiply({chassis->get_error().first, -chassis->get_error().second}, get_fac(ispos))) * chassis->get_p_constant() - 135.0) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
                     if (overature > 0) {
                         increment -= overature;
@@ -152,7 +152,7 @@ namespace meia {
             // decelerate
             profile(
                 chassis, [&](int time, int delta_time) -> std::pair<double, double> {
-                    const double tspeed = (((acc_time - time) / 1000.0) * decel);
+                    const double tspeed = (((acc_time - time) / 1000.0) * decel_in);
                     const double increment = (tspeed / 1000.0) * delta_time; // converts in/sec to in/msec, multiplies by delta_time
                     return {increment, -increment};
                 },

@@ -15,7 +15,7 @@ void goalrush(meia::ChassisController* drive) {
     // meia::p::turn(drive, 90.0, 30.0, 80.0, 14.5);
     // std::cout << "debt2: " << meia::p::debting_go(drive, 15, 47, 300) << std::endl;
     // std::cout << meia::p::turn(drive, 360, 20, 120, 14.1) << std::endl;
-    meia::p::turn(drive, -360 * 3, 120, 240, 14.1);
+    meia::p::debting_turn(drive, -360 * 3, 120, 240, 14.1);
 }
 
 
