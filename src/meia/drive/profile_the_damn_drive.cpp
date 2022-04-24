@@ -101,6 +101,7 @@ namespace meia {
             const int acc_time = (speed / decel) * 1000.0;
             double cruise_dist = (std::abs(amount) - ((acc_time / 1000.0) * speed / 2.0));
             bool ispos = amount > 0;
+            if (cruise_dist < 0) throw "acc too low";
             chassis->allowderivative(false);
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
@@ -118,7 +119,7 @@ namespace meia {
             // decelerate
             profile(
                 chassis, [&](int time, int delta_time) -> std::pair<double, double> {
-                    const double tspeed = (((acc_time - time) / 1000.0) * decel);
+                    const double tspeed = (((acc_time - (time + (0.5 * delta_time))) / 1000.0) * decel);
                     const double increment = (tspeed / 1000.0) * delta_time; // converts in/sec to in/msec, multiplies by delta_time
                     return {increment * get_fac(ispos), increment * get_fac(ispos)};
                 },
@@ -131,7 +132,7 @@ namespace meia {
             const double decel_in = (decel / 360.0) * (drive_width * m_pi);
             double debt = 0;
             const int acc_time = std::round((speed / decel) * 1000.0);                   // ms
-            double cruise_dist = std::abs(amount_in) - ((acc_time / 1000.0) * speed_in); // ms
+            double cruise_dist = std::abs(amount_in) - (((acc_time / 1000.0) * speed_in)/2.0); // ms
             if (cruise_dist < 0)
                 throw "acc too low";
             bool ispos = amount > 0;
@@ -145,7 +146,7 @@ namespace meia {
                         debt += overature;
                     }
                     cruise_dist -= increment;
-                    chassis->change_target({increment, -increment});
+                    chassis->change_target({increment * get_fac(ispos), -increment * get_fac(ispos)});
                     return (cruise_dist > 0);
                 });
             chassis->allowderivative(true);
@@ -154,7 +155,7 @@ namespace meia {
                 chassis, [&](int time, int delta_time) -> std::pair<double, double> {
                     const double tspeed = (((acc_time - time) / 1000.0) * decel_in);
                     const double increment = (tspeed / 1000.0) * delta_time; // converts in/sec to in/msec, multiplies by delta_time
-                    return {increment, -increment};
+                    return {increment * get_fac(ispos), -increment * get_fac(ispos)};
                 },
                 acc_time);
             return debt;

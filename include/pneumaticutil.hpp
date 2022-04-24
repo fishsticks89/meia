@@ -11,7 +11,7 @@ class Pneumatic {
         Pneumatic(char port, bool reversed)
             : solenoid(port), reversed(reversed){};
         void set(bool activated) {
-            solenoid.set_value((reversed) ? activated : !activated);
+            solenoid.set_value((!reversed) ? activated : !activated);
         }
         void activate() {
             set(true);

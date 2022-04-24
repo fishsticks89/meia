@@ -42,7 +42,8 @@ void competition_initialize() {
 
 void autonomous() {
     drive.tare();
-    goalrush(&drive);
+    std::cout << "dtemp: " << drive.get_motor_temps().first[0] << std::endl;
+    auton(&drive);
 }
 
 void opcontrol() {
@@ -52,9 +53,9 @@ void opcontrol() {
     ControlScheme control(&con);
     control.addDirectional(
         {pros::E_CONTROLLER_DIGITAL_L1, pros::E_CONTROLLER_DIGITAL_L2},
-        []() { lift.move_voltage(12000); },  // if first button is pressing
-        []() { lift.move_voltage(-12000); }, // if second button is pressing
-        []() { lift.move_voltage(0); }       // if neither are pressing
+        []() { lift.set_voltage(12000); },  // if first button is pressing
+        []() { lift.set_voltage(-12000); }, // if second button is pressing
+        []() { lift.set_voltage(0); }       // if neither are pressing
     );
     control.addDirectional(
         {pros::E_CONTROLLER_DIGITAL_R1, pros::E_CONTROLLER_DIGITAL_DOWN},

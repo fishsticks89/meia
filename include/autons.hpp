@@ -1,3 +1,3 @@
 #include "main.h"
 
-void goalrush(meia::ChassisController* drive);
+void auton(meia::ChassisController* drive);

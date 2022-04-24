@@ -44,13 +44,13 @@ namespace meia {
                     Chassis* chassis_ptr; // a pointer to the chassis the task controls
                     pros::Mutex mutex;    // the mutex to hold while modifying data
                     int delta_time;
-                    double ticks_per_inch; // motor.get_position()/inch
-                    double p;                     // the Proportional gain of the pid controller
-                    double i;                     // Integral gain
-                    double d;                     // Derivative gain
-                    double total_error;           // the total error experienced
-                    double left_target = 0;       // target in inches of the motor
-                    double right_target = 0;      // target in inches of the motor
+                    double ticks_per_inch;   // motor.get_position()/inch
+                    double p;                // the Proportional gain of the pid controller
+                    double i;                // Integral gain
+                    double d;                // Derivative gain
+                    double total_error;      // the total error experienced
+                    double left_target = 0;  // target in inches of the motor
+                    double right_target = 0; // target in inches of the motor
                     bool reset = true;
                     bool allowderivative = true;
             } pid_task_messenger;          // an instance of the pid task messenger struct used to commuicate with the pid task
@@ -62,19 +62,22 @@ namespace meia {
             explicit ChassisController(std::vector<int> left_motors, std::vector<int> right_motors, double wheel_diameter, int motor_rpm, double gear_ratio, Pid pid, int delay_time = 5)
                 : chassis(left_motors, right_motors),
                   pid_task_messenger(&chassis, pid, (
-                    // ticks per revolution
-                    // ticks per internal gear revolution * interior gear ratio * exterior gear ratio
-                    ((50.0 * (3600.0 / motor_rpm)) * gear_ratio) // with no cart, the encoder reads 50 counts per rotation, 3600.0/motor_rpm is = internal_gear_ratio
-                    /
-                    // inches per revolution
-                    (wheel_diameter * m_pi) // 2nd grade math
-                    ),
+                                                        // ticks per revolution
+                                                        // ticks per internal gear revolution * interior gear ratio * exterior gear ratio
+                                                        ((50.0 * (3600.0 / motor_rpm)) * gear_ratio) // with no cart, the encoder reads 50 counts per rotation, 3600.0/motor_rpm is = internal_gear_ratio
+                                                        /
+                                                        // inches per revolution
+                                                        (wheel_diameter * m_pi) // 2nd grade math
+                                                        ),
                       delay_time),
                   pid_loop_task(pid_loop, &pid_task_messenger, "pid_task"){};
             // a function to change the targets of the pid task
             void change_target(std::pair<double, double> deltatarget);
             // a function to change the correctional constants on the controller for the drive
             void set_pid_constants(double p, double i, double d);
+            void set_pid_constants(meia::Pid pid) {
+                set_pid_constants(pid.p, pid.i, pid.d);
+            };
             double get_p_constant();
             // a function to get the total error of the chassis
             double get_total_error();

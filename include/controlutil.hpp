@@ -34,7 +34,7 @@ class Button {
 class Toggleable {
     private:
         Button pressing;
-        bool toggle = true;
+        bool toggle = false;
 
     public:
         Toggleable(pros::Controller* con, pros::controller_digital_e_t button)

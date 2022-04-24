@@ -1,22 +1,44 @@
 #include "main.h"
 
+const double drive_width = 14.1;
+
 void goalrush(meia::ChassisController* drive) {
-    // std::cout << "autotime" << std::endl;
-    // clamp.deactivate();
-    // shtick.deactivate();
-    // std::cout << meia::p::debting_go(drive, 21.5, 40.0, 120.0) << std::endl;
-    // std::cout << meia::p::debting_go(drive, -21.5, 60.0, 90.0) << std::endl;
-    // if (std::abs(drive->get_error().first) > 4) {
-    //     meia::p::profile(drive, [](int t, int tt) -> std::pair<double, double> {
-    //         return {-0.1, -0.1};
-    //     }, 15000);
-    // }
-    // std::cout << "debt: " << meia::p::debting_go(drive, -24, 47, 300) << std::endl;
-    // meia::p::turn(drive, 90.0, 30.0, 80.0, 14.5);
-    // std::cout << "debt2: " << meia::p::debting_go(drive, 15, 47, 300) << std::endl;
-    // std::cout << meia::p::turn(drive, 360, 20, 120, 14.1) << std::endl;
-    meia::p::debting_turn(drive, -360 * 3, 120, 240, 14.1);
+    shtick.activate();
+    std::cout << meia::p::debting_go(drive, 34, 70, 240) << std::endl;
+    std::cout << meia::p::debting_go(drive, -34, 70, 240) << std::endl;
+}
+void goalrushrings(meia::ChassisController* drive) {
+    shtick.activate();
+    // shtick nmogo
+    std::cout << meia::p::debting_go(drive, 34, 60, 150) << std::endl;
+    std::cout << meia::p::debting_go(drive, -34, 60, 90) << std::endl;
+    drive->set_pid_constants(drive_pid);
+    lift.set_voltage(-4000);
+    clamp.deactivate();
+    shtick.deactivate();
+    pros::delay(200);
+    // get nmogo in clamp
+    meia::p::turn(drive, 10, 30, 100, drive_width);
+    meia::p::debting_go(drive, 16.5, 50, 240);
+    clamp.activate();
+    lift.set_target(20);
+    pros::delay(200);
+    // get rmogo in
+    meia::p::turn(drive, -100, 140, 300, drive_width);
+    lift.set_voltage(-4000);
+    meia::p::debting_go(drive, -18, 30, 240);
+    pros::delay(200);
+    mogo.activate();
+    lift.set_target(40);
+    meia::p::debting_go(drive, 3, 30, 6000);
+    meia::p::turn(drive, 91, 90, 360, drive_width);
+    lift.set_target(50);
+    take.move_voltage(12000);
+    meia::p::debting_go(drive, 45, 13, 50);
+    meia::p::debting_go(drive, -50, 70, 180);
 }
 
-
-
+void auton(meia::ChassisController* drive) {
+    goalrushrings(drive);
+    clamp.deactivate();
+}

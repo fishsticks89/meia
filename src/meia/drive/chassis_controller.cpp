@@ -49,7 +49,7 @@ namespace meia {
         pid_task_messenger.mutex.give();
     }
     void ChassisController::set_pid_constants(double p, double i, double d) {
-        pid_task_messenger.mutex.take(1000);
+        pid_task_messenger.mutex.take(10000);
         pid_task_messenger.p = p;
         pid_task_messenger.i = i;
         pid_task_messenger.d = d;
@@ -75,14 +75,19 @@ namespace meia {
     struct pid_internal {
             pid_internal(double p, double i, double d)
                 : kp(p), ki(i), kd(d){};
-            const double kp;
-            const double ki;
-            const double kd;
+            double kp;
+            double ki;
+            double kd;
             int accumulated_integral_error = 0;
             int prev_error = 0;
             void reset() {
                 accumulated_integral_error = 0;
                 prev_error = 0;
+            }
+            void set_constants(meia::Pid pid) {
+                kp = pid.p;
+                ki = pid.i;
+                kd = pid.d;
             }
             double calc(double diff, bool allow_d) {
                 // new pid is calculated
@@ -117,6 +122,10 @@ namespace meia {
                     right_pid.reset();
                     std::pair<double, double> pid_correct = {0, 0};
                 }
+                void set_constants(meia::Pid pid) {
+                    left_pid.set_constants(pid);
+                    right_pid.set_constants(pid);
+                }
         } pid_info(io->p, io->i, io->d);
 
         io->mutex.give(); // returns the mutex
@@ -129,6 +138,7 @@ namespace meia {
                 pid_info.reset();
                 io->reset = false;
             }
+            pid_info.set_constants(meia::Pid(io->p, io->i, io->d));
 
             pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target - (pid_info.motor_positions.first / io->ticks_per_inch), io->allowderivative);
             pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target - (pid_info.motor_positions.second / io->ticks_per_inch), io->allowderivative);
