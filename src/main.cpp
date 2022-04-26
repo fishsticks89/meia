@@ -13,14 +13,14 @@ meia::ChassisController drive(
     // Options
     5 // delay time
 );
-meia::Console console;
 
 void initialize() {
-    console.init();
     pros::screen::touch_callback([](int16_t x, int16_t y) { exit(0); }, pros::E_TOUCH_PRESSED);
     setupMotors();
     drive.tare();
     pros::Task die([](void* p) {
+        pros::delay(100);
+        std::cout << "dtemp: " << drive.get_motor_temps().first[0] << std::endl;
         ControlScheme control(&con);
         control.addButton(pros::E_CONTROLLER_DIGITAL_UP, []() {
             exit(0);
@@ -41,8 +41,8 @@ void competition_initialize() {
 }
 
 void autonomous() {
+    awaitCalibrate();
     drive.tare();
-    std::cout << "dtemp: " << drive.get_motor_temps().first[0] << std::endl;
     auton(&drive);
 }
 

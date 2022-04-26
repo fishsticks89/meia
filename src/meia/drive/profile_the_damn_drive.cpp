@@ -95,6 +95,57 @@ namespace meia {
                 acc_time);
             return 0;
         }
+        double arcturn(ChassisController* chassis, bool left, double amount, double speed, double acc, double drive_width) {
+            const double amount_in = (amount / 360.0) * (drive_width * m_pi);
+            const double speed_in = (speed / 360.0) * (drive_width * m_pi);
+            const double acc_in = (acc / 360.0) * (drive_width * m_pi);
+            std::cout << "amount: " << amount_in << std::endl;
+            const int acc_time = (speed / acc) * 1000; // ((in/sec) / (in/sec^2)) * (ms/sec); ms
+            const double acc_dist = (acc_time / 1000.0) * speed_in;
+            std::cout << "acc_dist: " << acc_dist << std::endl;
+            const double cruise_dist = std::abs(amount_in) - acc_dist; // in - ((sec * deg/sec)) * (drive_width * m_pi / 360.0))
+            std::cout << "cdist: " << cruise_dist << std::endl;
+            const int cruise_time = (cruise_dist / speed_in) * 1000;
+            if (cruise_time < 0)
+                throw "acc too low";
+            bool ispos = amount_in > 0;
+            // accelerate
+            profile(
+                chassis, [&](int time, int delta_time) -> std::pair<double, double> {
+                    const double tspeed = ((time / 1000.0) * acc_in);
+                    const double increment = (tspeed / 1000.0) * delta_time; // converts in/sec to in/msec, multiplies by delta_time
+                    if (left) {
+                        return {increment * get_fac(ispos) * 2, 0};
+                    } else {
+                        return {0, -increment * get_fac(ispos) * 2};
+                    }
+                },
+                acc_time);
+            // cruise
+            profile(
+                chassis, [&](int time, int delta_time) -> std::pair<double, double> {
+                    const double increment = (speed_in / 1000.0) * delta_time; // converts in/sec to in/msec, multiplies by delta_time
+                    if (left) {
+                        return {increment * get_fac(ispos) * 2, 0};
+                    } else {
+                        return {0, -increment * get_fac(ispos) * 2};
+                    }
+                },
+                cruise_time);
+            // decelerate
+            profile(
+                chassis, [&](int time, int delta_time) -> std::pair<double, double> {
+                    const double tspeed = (((acc_time - time) / 1000.0) * acc_in); // ((sec) / (msec/sec)) * in/sec^2
+                    const double increment = (tspeed / 1000.0) * delta_time;       // converts in/sec to in/msec, multiplies by delta_time
+                    if (left) {
+                        return {increment * get_fac(ispos) * 2, 0};
+                    } else {
+                        return {0, -increment * get_fac(ispos) * 2};
+                    }
+                },
+                acc_time);
+            return 0;
+        }
 
         double debting_go(ChassisController* chassis, double amount, double speed, double decel) {
             double debt = 0;

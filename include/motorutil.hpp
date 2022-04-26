@@ -7,24 +7,27 @@ class Motor {
         }
         pros::Task task;
         std::function<void()> motor_loop = [&]() {
+            double prev_error = 0;
             while (true) {
                 if (runpid) {
-                    motor.move_voltage((((!reversed) ? pidtarget : -pidtarget) * fac - motor.get_position()) * p);
+                    const double error = ((!reversed) ? pidtarget : -pidtarget) * fac - motor.get_position();
+                    motor.move_voltage(error * p.p + (prev_error - error) * p.d);
+                    prev_error = error;
                 }
                 pros::delay(5);
             }
         };
-        pros::Motor motor;
     public:
+        pros::Motor motor;
         static double get_motor_fac(int motor_ratio, double gear_ratio) {
             return ((50.0 * motor_ratio) * gear_ratio) / 360.0;
         }
         bool reversed;
-        double p = 1;
+        meia::Pid p;
         double fac = 1;
         bool runpid = false;
         double pidtarget = 0;
-        Motor(int_fast16_t port, double correct, bool reversed)
+        Motor(int_fast16_t port, bool reversed, meia::Pid correct = meia::Pid (10000, 0, 0))
             : motor(port), reversed(reversed), p(correct), task(task_fn, &motor_loop, "balls") {
             };
         void set_fac(double pfac) {

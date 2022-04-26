@@ -39,6 +39,7 @@ namespace meia {
          * @return avg error
          */
         double turn(ChassisController* chassis, double amount, double speed, double acc, double drive_width);
+        double arcturn(ChassisController* chassis, bool left, double amount, double speed, double acc, double drive_width);
         double debting_go(ChassisController* chassis, double amount, double speed, double decel);
         double debting_turn(ChassisController* chassis, double amount, double speed, double decel, double drive_width);
     } // namespace p
