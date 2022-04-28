@@ -7,7 +7,7 @@ bool imucalibrated = false;
 
 void awaitCalibrate() {
     while (!imucalibrated) {
-        pros::delay(500);
+        pros::delay(200);
     }
 }
 

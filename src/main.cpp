@@ -15,6 +15,10 @@ meia::ChassisController drive(
 );
 
 void initialize() {
+    bool skills = true;
+    if (skills) {
+        mogo.deactivate();
+    }
     pros::screen::touch_callback([](int16_t x, int16_t y) { exit(0); }, pros::E_TOUCH_PRESSED);
     setupMotors();
     drive.tare();
