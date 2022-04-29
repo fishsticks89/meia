@@ -47,7 +47,7 @@ void iturnb(meia::ChassisController* drive, bool dir, double target, double spee
     std::cout  << "lolololo: " << (speed / acc) * speed << std::endl;
     meia::p::imuturn(drive, dir, &imu, target, speed, acc, drive_width, drive_pd);
 }
-void iturn(meia::ChassisController* drive, double target, double speed = 360, double acc = 720, meia::Pid drive_pd = meia::Pid(0.5, 0, 0)) {
+void iturn(meia::ChassisController* drive, double target, double speed = 360, double acc = 720, meia::Pid drive_pd = meia::Pid(8, 0, 0)) {
     bool dir = imu.get_dir(target);
     iturnb(drive, dir, target, speed, acc, drive_pd);
 }
@@ -196,32 +196,41 @@ void soloawp(meia::ChassisController* drive) {
 
 void sKILLS(meia::ChassisController* drive) {
     drive_width = 14.41;
-    // { // get first mogo
-    //     mogo.deactivate();
-    //     go(drive, -3, 10, 4);
-    //     mogo.activate();
-    //     pros::delay(400);
-    // }
-    // { // get neutral goal
-    //     double turn = 101;
-    //     arcturn(drive, true, turn, 100);
-    //     clamp.deactivate();
-    //     lift.set_voltage(-4000);
-    //     igo(drive, turn, 37.5);
-    //     clamp.activate();
-    //     lift.set_target(20);
-    //     igo(drive, turn, 40, 45, 60);
-    // }
-    // { // get rings and platform mogo
-    //     take.move_voltage(12000);
-    //     std::cout << imu.get_dist(180);
-    //     iturn(drive, 180);
-    //     lift.set_target(140);
-    //     igo(drive, 180, 37);
-    // }
-    iturn(drive, 180, 100);
-    igo(drive, 180, 5);
-    turn(drive, 180);
+    { // get first mogo
+        mogo.deactivate();
+        go(drive, -3, 20, 8);
+        mogo.activate();
+        pros::delay(400);
+    }
+    { // get neutral goal
+        const double turnd = 101;
+        arcturn(drive, true, turnd, 100);
+        clamp.deactivate();
+        lift.set_voltage(-4000);
+
+        igo(drive, turnd, 38.5);
+        clamp.activate();
+        lift.set_target(20);
+        igo(drive, turnd, 40, 45, 80);
+    }
+    { // get rings
+        const double turnd = 180;
+        iturn(drive, turnd, 90, 400);
+        lift.set_target(102);
+        igo(drive, turnd, 20, 30);
+        take.move_voltage(12000);
+        igo(drive, turnd, 10, 10);
+    }
+    { // platform mogo
+        const double turnd = 90;
+        iturn(drive, turnd, 90, 400);
+        igo(drive, turnd, 10, 30);
+    }
+    
+        // igo(drive, 0, 20);
+        // iturn(drive, 180);
+        // // lift.set_target(102);
+        // igo(drive, 180, 20, 30);
 }
 
 void auton(meia::ChassisController* drive) {

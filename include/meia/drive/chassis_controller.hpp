@@ -88,6 +88,7 @@ namespace meia {
             void tare();
             int get_delay_time();
             void allowderivative(bool allow);
-            std::pair<double, double> get_error();
+            std::pair<double, double> get_error_legacy();
+            std::pair<double, double> get_error_in();
     };
 } // namespace meia

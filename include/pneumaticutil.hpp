@@ -1,6 +1,6 @@
 #include "main.h"
 using void_fn = void (*)(void);
-using bool_fn = void (*)(bool);
+using bool_fn = std::function<void(bool)>;
 
 class Pneumatic {
     private:

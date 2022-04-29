@@ -15,11 +15,8 @@ meia::ChassisController drive(
 );
 
 void initialize() {
-    bool skills = true;
-    if (skills) {
-        mogo.deactivate();
-    }
-    pros::screen::touch_callback([](int16_t x, int16_t y) { exit(0); }, pros::E_TOUCH_PRESSED);
+    // die
+    // pros::screen::touch_callback([](int16_t x, int16_t y) { exit(0); }, pros::E_TOUCH_PRESSED);
     setupMotors();
     drive.tare();
     pros::Task die([](void* p) {
@@ -27,7 +24,8 @@ void initialize() {
         std::cout << "dtemp: " << drive.get_motor_temps().first[0] << std::endl;
         ControlScheme control(&con);
         control.addButton(pros::E_CONTROLLER_DIGITAL_UP, []() {
-            exit(0);
+            // die
+            // exit(0);
         });
         while (true) {
             control();
@@ -51,6 +49,7 @@ void autonomous() {
 }
 
 void opcontrol() {
+    mogo.deactivate();
     // autonomous();
     // pros::delay(80000);
     // drive.tare();
@@ -71,6 +70,7 @@ void opcontrol() {
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_X, [](bool act) { mogo.set(act); });   // sets the mogo to toggled state
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_A, [](bool act) { shtick.set(act); }); // sets the shtick to toggled state
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_Y, [](bool act) { hpost.set(act); });  // sets the high post mech to toggled state
+    // control.addToggleable(pros::E_CONTROLLER_DIGITAL_B, [](bool act) { drive.set_drive_brake((act) ? pros::E_MOTOR_BRAKE_BRAKE : pros::E_MOTOR_BRAKE_COAST); });
     while (true) {
         control();
         drive.tank_control(&con, pros::E_MOTOR_BRAKE_COAST, 3.2); // controller, brake mode, curve intensity

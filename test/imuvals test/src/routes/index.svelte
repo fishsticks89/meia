@@ -11,7 +11,7 @@
 	let rotation = 0;
 	let prevnum = num;
 	setInterval(() => {
-		rotation -= (prevnum - num * (1 - (Math.random()/10000))) / 250;
+		rotation -= (prevnum - num * (1 - (Math.random()/500))) / 250;
 		prevnum = num
 	}, 5);
 	funcs(

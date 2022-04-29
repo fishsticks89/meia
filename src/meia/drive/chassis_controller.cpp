@@ -1,13 +1,20 @@
 #include "chassis_util.cpp"
 #include "main.h"
+std::pair<double, double> eachpair(std::pair<double, double> pair, std::function<double(double)> func) {
+    return {func(pair.first), func(pair.second)};
+}
 namespace meia {
     //! utility
     int ChassisController::get_delay_time() {
         return pid_task_messenger.delta_time;
     }
-    std::pair<double, double> ChassisController::get_error() {
+    std::pair<double, double> ChassisController::get_error_legacy() {
         auto motor_positions = pid_task_messenger.chassis_ptr->get_motor_positions();
-        return { (pid_task_messenger.left_target - (motor_positions.first / pid_task_messenger.ticks_per_inch)), (pid_task_messenger.right_target - (motor_positions.second / pid_task_messenger.ticks_per_inch))};
+        return {(pid_task_messenger.left_target - (motor_positions.first / pid_task_messenger.ticks_per_inch)), (pid_task_messenger.right_target - (motor_positions.second / pid_task_messenger.ticks_per_inch))};
+    }
+    std::pair<double, double> ChassisController::get_error_in() {
+        auto motor_positions = pid_task_messenger.chassis_ptr->get_motor_positions();
+        return {pid_task_messenger.left_target - (motor_positions.first / pid_task_messenger.ticks_per_inch), (pid_task_messenger.right_target - (motor_positions.second / pid_task_messenger.ticks_per_inch))};
     }
     //! inherited from Chassis
     void ChassisController::tank_control(pros::Controller* con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity, int deadzone) {
@@ -39,8 +46,8 @@ namespace meia {
         pid_task_messenger.mutex.take(3000);
         // reset if nessessary
         if (pid_task_messenger.reset == true) {
-            pid_task_messenger.left_target = chassis.get_motor_positions().first;
-            pid_task_messenger.right_target = chassis.get_motor_positions().second;
+            pid_task_messenger.left_target = chassis.get_motor_positions().first * pid_task_messenger.ticks_per_inch;
+            pid_task_messenger.right_target = chassis.get_motor_positions().second * pid_task_messenger.ticks_per_inch;
         }
         pid_task_messenger.chassis_ptr->set_drive_brake(pros::E_MOTOR_BRAKE_BRAKE);
         pid_loop_task.resume();

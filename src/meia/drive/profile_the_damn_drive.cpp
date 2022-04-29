@@ -165,7 +165,7 @@ namespace meia {
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
                     double increment = (speed / 1000.0) * delta_time;
-                    const double overature = (getBigger(multiply(chassis->get_error(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
+                    const double overature = (getBigger(multiply(chassis->get_error_legacy(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
                     if (overature > 0) {
                         increment -= overature;
                         debt += overature;
@@ -201,7 +201,7 @@ namespace meia {
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
                     double increment = (speed_in / 1000.0) * delta_time;
-                    const double overature = (getBigger(multiply({chassis->get_error().first, -chassis->get_error().second}, get_fac(ispos))) * chassis->get_p_constant() - 135.0) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
+                    const double overature = (getBigger(multiply({chassis->get_error_in().first, -chassis->get_error_in().second}, get_fac(ispos))) * chassis->get_p_constant() - 135.0) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
                     if (overature > 0) {
                         increment -= overature;
                         debt += overature;
@@ -222,13 +222,13 @@ namespace meia {
             return debt;
         }
 
-        // void logtarg(double tt) {
-        //     int t = pros::millis();
-        //     if (true) { // ((t - (t % 5)) % 1000 == 0){
-        //         std::cout << tt << std::endl;
-        //     }
-        // }
-        
+        void logtarg(std::string tt) {
+            int t = pros::millis();
+            if ((t - (t % 5)) % 1000 == 0){
+                std::cout << tt << std::endl;
+            }
+        }
+
         void imuturn(meia::ChassisController* chassis, bool left, Imu* imu, double target, double speed, double acc, double drive_width, meia::Pid pd) {
             target = imu->wrap(target);
             double amount = imu->get_dist(left, target);
@@ -245,12 +245,17 @@ namespace meia {
                 std::cout << "6ee" << std::endl;
                 throw "acc too low";
             }
-            double preverr = 0;
+            const double start_angle = imu->get_orientation();
+            double prev_theoretical_err = 0;
             std::function<double(double)> pidloop = [&](double delta_time) -> double {
                 delta_time /= 1000;
-                const double err = imu->get_dist(imu->wrap(target));
-                const double deltatarget = ((pd.p * err) + (pd.d * (err - preverr)) * (drive_width * m_pi)) * delta_time;
-                preverr = err;
+                const double err = imu->get_dist(imu->wrap(target + start_angle));
+                auto chassis_err = chassis->get_error_in();
+                double theoretical_error = err + (((chassis_err.second - chassis_err.first) / (drive_width * m_pi)) * 360);
+                theoretical_error = imu->wrap(theoretical_error);
+                const double deltatarget = ((pd.p * theoretical_error) + (pd.d * (theoretical_error - prev_theoretical_err)) * (drive_width * m_pi)) * delta_time;
+                prev_theoretical_err = theoretical_error;
+                std::cout << "theo: " << theoretical_error << " acc: " << err << " diff: " << err - theoretical_error << " derr: " << chassis_err.second << std::endl;
                 chassis->change_target({deltatarget, -deltatarget});
                 return err;
             };
@@ -285,7 +290,7 @@ namespace meia {
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
                     const double error = pidloop(delta_time);
-                    return error > 2;
+                    return std::abs(error) > 2;
                 });
             std::cout << "Settletime " << pros::millis() - settlestart << std::endl;
         }
@@ -311,7 +316,7 @@ namespace meia {
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
                     double increment = (speed / 1000.0) * delta_time;
-                    const double overature = (getBigger(multiply(chassis->get_error(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
+                    const double overature = (getBigger(multiply(chassis->get_error_legacy(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
                     if (overature > 0) {
                         increment -= overature;
                         debt += overature;
