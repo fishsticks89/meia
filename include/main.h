@@ -78,6 +78,7 @@ void opcontrol(void);
 #include "controlutil.hpp"
 #include "pneumaticutil.hpp"
 #include "motorutil.hpp"
+#include "autoselector.hpp"
 #include "motors.hpp"
 #include "autons.hpp"
 

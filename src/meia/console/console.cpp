@@ -55,8 +55,8 @@ namespace meia
     void Console::logo()
     {
         logs_struct::clear();
-        std::vector<std::pair<std::pair<int_fast16_t, int_fast16_t>, bool>> whitels = white();
-        std::vector<std::pair<std::pair<int_fast16_t, int_fast16_t>, bool>> bluels = blue();
+        auto whitels = white();
+        auto bluels = blue();
         int i = 0;
         bool draw = false;
         pros::screen::set_pen(RGB2COLOR(0, 0, 0));

@@ -5,6 +5,8 @@ Motor lift(1, true, meia::Pid(5000.0, 0, 0));
 pros::Motor take(9);
 bool imucalibrated = false;
 
+meia::Console console;
+
 void awaitCalibrate() {
     while (!imucalibrated) {
         pros::delay(200);

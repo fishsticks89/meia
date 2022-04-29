@@ -15,6 +15,8 @@ meia::ChassisController drive(
 );
 
 void initialize() {
+    pros::delay(200);
+    console.init();
     // die
     // pros::screen::touch_callback([](int16_t x, int16_t y) { exit(0); }, pros::E_TOUCH_PRESSED);
     setupMotors();
@@ -22,17 +24,34 @@ void initialize() {
     pros::Task die([](void* p) {
         pros::delay(100);
         std::cout << "dtemp: " << drive.get_motor_temps().first[0] << std::endl;
-        ControlScheme control(&con);
-        control.addButton(pros::E_CONTROLLER_DIGITAL_UP, []() {
-            // die
-            // exit(0);
-        });
-        while (true) {
-            control();
-            pros::delay(5);
-        }
+        // ControlScheme control(&con);
+        // control.addButton(pros::E_CONTROLLER_DIGITAL_UP, []() {
+        //     // die
+        //     // exit(0);
+        // });
+        // while (true) {
+        //     control();
+        //     pros::delay(5);
+        // }
+        pros::delay(3000);
+        autons.log();
     },
         nullptr, "water");
+    pros::screen::touch_callback([](int16_t x, int16_t y){
+        switch (console.to_button(x, y)) {
+            case meia::left:
+                autons.switch_left();
+                break;
+            case meia::right:
+                autons.switch_right();
+                break;
+            case meia::center:
+                console.log("calibrating imu");
+                imu.calibrate();
+                console.log("imu calibrated");
+                break;
+        }
+    },pros::E_TOUCH_PRESSED);
 }
 
 void disabled() {
@@ -45,7 +64,7 @@ void competition_initialize() {
 void autonomous() {
     awaitCalibrate();
     drive.tare();
-    auton(&drive);
+    autons.run(&drive);
 }
 
 void opcontrol() {
