@@ -10,8 +10,12 @@ class Motor {
             double prev_error = 0;
             while (true) {
                 if (runpid) {
-                    const double error = ((!reversed) ? pidtarget : -pidtarget) * fac - motor.get_position();
-                    motor.move_voltage(error * p.p + (prev_error - error) * p.d);
+                    const double error = ((!reversed) ? pidtarget : -pidtarget) - (motor.get_position() / fac);
+                    if (std::abs(error) > 2) {
+                        motor.move_voltage((error * p.p + (prev_error - error) * p.d));
+                    } else {
+                        motor.move_voltage(0);
+                    }
                     prev_error = error;
                 }
                 pros::delay(5);

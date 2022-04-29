@@ -224,7 +224,7 @@ namespace meia {
 
         void logtarg(std::string tt) {
             int t = pros::millis();
-            if ((t - (t % 5)) % 1000 == 0){
+            if ((t - (t % 5)) % 1000 == 0) {
                 std::cout << tt << std::endl;
             }
         }
@@ -287,10 +287,13 @@ namespace meia {
                     return std::abs(target) < std::abs(amount);
                 });
             int settlestart = pros::millis();
+            double preverr = 0;
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
                     const double error = pidloop(delta_time);
-                    return std::abs(error) > 2;
+                    bool should_continue = std::abs(error) > 2 || std::abs(error - preverr) > ((2 / 1000.0) * delta_time);
+                    preverr = error;
+                    return should_continue;
                 });
             std::cout << "Settletime " << pros::millis() - settlestart << std::endl;
         }

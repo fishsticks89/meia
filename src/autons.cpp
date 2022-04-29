@@ -37,7 +37,9 @@ void igo(meia::ChassisController* drive, double heading_target, double amount, d
     meia::p::debting_go_heading_corr(drive, &imu, amount, speed, acc, heading_pd, heading_target, drive_width);
 }
 
-void iturnb(meia::ChassisController* drive, bool dir, double target, double speed, double acc, meia::Pid drive_pd) {
+const auto t_pd = meia::Pid(8, 0, 0);
+
+void iturnb(meia::ChassisController* drive, bool dir, double target, double speed = 360, double acc = 720, meia::Pid drive_pd = t_pd) {
     target = imu.wrap(target);
     double amount = imu.get_dist(dir, target);
     if ((speed / acc) * speed > std::abs(amount)) {
@@ -47,7 +49,7 @@ void iturnb(meia::ChassisController* drive, bool dir, double target, double spee
     std::cout  << "lolololo: " << (speed / acc) * speed << std::endl;
     meia::p::imuturn(drive, dir, &imu, target, speed, acc, drive_width, drive_pd);
 }
-void iturn(meia::ChassisController* drive, double target, double speed = 360, double acc = 720, meia::Pid drive_pd = meia::Pid(8, 0, 0)) {
+void iturn(meia::ChassisController* drive, double target, double speed = 360, double acc = 720, meia::Pid drive_pd = t_pd) {
     bool dir = imu.get_dir(target);
     iturnb(drive, dir, target, speed, acc, drive_pd);
 }
@@ -198,9 +200,10 @@ void sKILLS(meia::ChassisController* drive) {
     drive_width = 14.41;
     { // get first mogo
         mogo.deactivate();
+        pros::delay(700);
+        pros::delay(200);
         go(drive, -3, 20, 8);
         mogo.activate();
-        pros::delay(400);
     }
     { // get neutral goal
         const double turnd = 101;
@@ -216,24 +219,66 @@ void sKILLS(meia::ChassisController* drive) {
     { // get rings
         const double turnd = 180;
         iturn(drive, turnd, 90, 400);
-        lift.set_target(102);
+        lift.set_target(95);
         igo(drive, turnd, 20, 30);
         take.move_voltage(12000);
-        igo(drive, turnd, 10, 10);
+        igo(drive, turnd, 15, 10);
+        igo(drive, turnd, -8);
     }
-    { // platform mogo
-        const double turnd = 90;
+    { // platform nmogo
+        double turnd = 90;
         iturn(drive, turnd, 90, 400);
-        igo(drive, turnd, 10, 30);
+        pros::delay(200);
+        mogo.deactivate(); // leave mogo to be picked up later
+        pros::delay(500);
+        take.move_voltage(0);
+        pros::delay(200);
+        igo(drive, turnd, 4, 30, 50); // try to get off rear mogo
+        igo(drive, turnd, 8, 30, 50);
+        lift.set_target(50);
+        pros::delay(700);
+        clamp.deactivate();
+        lift.set_target(95);
+        pros::delay(800);
+        igo(drive, turnd, -2, 30);
+        mogo.activate();
     }
+    { // fclamp rmogo
+        const double turnd = -90;
+        iturnb(drive, true, turnd, 360, 300);
+        lift.set_voltage(-12000);
+        pros::delay(900);
+        igo(drive, turnd, 10, 30);
+        clamp.activate();
+        lift.set_target(20);
+    }
+    { // platform rmogo & push back bnmogo
+        double turnd = 90;
+        iturn(drive, turnd, 360, 100);
+        lift.set_target(80);
+        take.move_voltage(0);
+        pros::delay(200);
+        lift.set_target(70);
+        pros::delay(700);
+        igo(drive, turnd, 15, 30, 30);
+        clamp.deactivate();
+        lift.set_target(95);
+        pros::delay(500);
+        lift.set_target(4);
     
-        // igo(drive, 0, 20);
-        // iturn(drive, 180);
-        // // lift.set_target(102);
-        // igo(drive, 180, 20, 30);
+        // push back bnmogo
+        igo(drive, turnd, -66);
+        igo(drive, turnd, 2);
+    }
+    { // go get the ramogo
+        double turnd = -150;
+        iturn(drive, turnd);
+        igo(drive, turnd, -66);
+    }   
 }
 
 void auton(meia::ChassisController* drive) {
     sKILLS(drive);
     clamp.deactivate();
+    mogo.deactivate();
 }
