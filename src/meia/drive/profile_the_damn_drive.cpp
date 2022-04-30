@@ -312,7 +312,7 @@ namespace meia {
                 theoretical_error = imu->wrap(theoretical_error);
                 const double deltatarget = ((heading_pd.p * theoretical_error) + (heading_pd.d * (theoretical_error - prev_theoretical_err)) * (drive_width * m_pi)) * delta_time;
                 prev_theoretical_err = theoretical_error;
-                std::cout << "theo: " << theoretical_error << " acc: " << err << " diff: " << err - theoretical_error << " derr: " << chassis_err.second << std::endl;
+                // std::cout << "theo: " << theoretical_error << " acc: " << err << " diff: " << err - theoretical_error << " derr: " << chassis_err.second << std::endl;
                 chassis->change_target({deltatarget, -deltatarget});
                 return err;
             };

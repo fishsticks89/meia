@@ -63,6 +63,7 @@ void competition_initialize() {
 
 void autonomous() {
     awaitCalibrate();
+    imu.zero();
     drive.tare();
     autons.run(&drive);
 }

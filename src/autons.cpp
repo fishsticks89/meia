@@ -218,21 +218,25 @@ void sKILLS(meia::ChassisController* drive) {
 
         turnd = 135;
         iturn(drive, turnd, 360, 500);
+        take.move_voltage(12000);
         lift.set_target(95);
         igo(drive, turnd, 48, 45, 80);
+        lift.set_target(95); // for some reason if first doesn't work
+        take.move_voltage(0);
     }
     { // platform nmogo
         double turnd = 90;
         iturn(drive, turnd, 90, 400);
         pros::delay(200);
         mogo.deactivate(); // leave mogo to be picked up later
-        pros::delay(700);
-        igo(drive, turnd, 4, 40, 130); // try to get off rear mogo
-        pros::delay(170);
-        igo(drive, turnd, 13, 30, 100);
+        pros::delay(400);
+        igo(drive, turnd, 4, 40, 170); // try to get off rear mogo
+        pros::delay(200);
+        igo(drive, turnd, 13, 30, 70);
         lift.set_target(50);
-        pros::delay(800);
+        pros::delay(700);
         clamp.deactivate();
+        pros::delay(100);
         lift.set_target(95);
         pros::delay(450);
         igo(drive, turnd, -3, 30);
@@ -241,7 +245,6 @@ void sKILLS(meia::ChassisController* drive) {
         const double turnd = -90;
         async.timeout([]() { lift.set_voltage(-12000); }, 500);
         iturnb(drive, true, turnd, 360, 200);
-        pros::delay(300);
         igo(drive, turnd, 10, 30);
         clamp.activate();
     }
@@ -250,53 +253,53 @@ void sKILLS(meia::ChassisController* drive) {
         lift.set_target(85);
         iturn(drive, turnd, 360, 200);
         take.move_voltage(0);
-        igo(drive, turnd, 15, 30, 30);
+        igo(drive, turnd, 17, 30, 30);
         lift.set_target(70);
         pros::delay(200);
         clamp.deactivate();
         pros::delay(500);
-        lift.set_target(95);
-        // igo(drive, turnd, -9, 30, 60); // center with nmogo
+        igo(drive, turnd, -2, 30, 60); // center with nmogo
 
         turnd = -90;
         lift.set_target(0);
-        iturn(drive, turnd, 360, 300);
+        iturn(drive, turnd, 360, 500);
         lift.set_target(-3);
 
         // push back bnmogo
-        mogo.activate();
         drive->set_pid_constants(400, 0, 200);
-        async.timeout([]() { clamp.activate(); lift.set_target(30); }, 700);
-        igo(drive, turnd, 56, 45, 30);
+        take.move_voltage(12000);
+        igo(drive, turnd, 62, 45, 100);
         drive->set_pid_constants(drive_pid);
-        igo(drive, turnd, -4, 20, 50);
+        take.move_voltage(-12000);
+        clamp.deactivate();
+        igo(drive, turnd, -6);
     }
-    { // go get the ramogo & center with rnmogo
-        double turnd = 20;
+    { // get ramogo & center with rnmogo
+        double turnd = 17;
         iturnb(drive, false, turnd, 360, 300);
-        mogo.deactivate();
         lift.set_target(0); // get ready to release mogo
         pros::delay(200);
-        async.timeout([]() { clamp.deactivate(); }, 400);
-        igo(drive, turnd, -20);
-        turnd = 0;
-        iturn(drive, turnd, 360, 200);
         lift.set_voltage(-3000); // lower lift
-        igo(drive, turnd, -26);
-        igo(drive, turnd, -3, 20, 8);
+        async.timeout([]() { clamp.deactivate(); take.move_voltage(0); }, 200);
+        igo(drive, turnd, -43, 40, 40);
+        pros::delay(100);
+        igo(drive, turnd, -7.5, 60, 12);
         mogo.activate();
         pros::delay(200);
 
+        turnd = 0;
+
         // center with nmogo
-        igo(drive, turnd, 14);
+        iturn(drive, turnd);
+        igo(drive, turnd, 16);
     }
-    { // TODO: get rnmogo
+    { // get rnmogo
         double turnd = 90;
         iturn(drive, turnd, 360, 500);
-        igo(drive, turnd, 24);
+        igo(drive, turnd, 23);
         clamp.activate();
         lift.set_target(35);
-        igo(drive, turnd, 36, 45, 40);
+        igo(drive, turnd, 34, 45, 40);
         turnd = 0;
         take.move_voltage(12000);
         iturn(drive, turnd, 360, 500);
@@ -304,64 +307,86 @@ void sKILLS(meia::ChassisController* drive) {
 
         // center with plat
         lift.set_target(95);
-        igo(drive, turnd, 30, 15);
-        igo(drive, turnd, 20, 45, 50);
+        igo(drive, turnd, 50, 45, 50, meia::Pid(6, 0, 0));
+        pros::delay(200);
         igo(drive, turnd, -10, 45, 50);
         pros::delay(200);
     }
-    { // TODO: platform rnmogo
+    { // platform rnmogo
         double turnd = 90;
         iturn(drive, turnd, 360, 500);
         mogo.deactivate();
-        pros::delay(500);
-        lift.set_target(85);
         take.move_voltage(0);
-        pros::delay(200);
-        lift.set_target(70);
-        pros::delay(700);
-        igo(drive, turnd, 17, 30, 30);
-        clamp.deactivate();
-        lift.set_target(95);
+        lift.set_target(80);
         pros::delay(500);
+        igo(drive, turnd, 5, 45, 130);
+        pros::delay(130);
+        igo(drive, turnd, 12, 30, 30);
+        clamp.deactivate();
+        lift.set_target(70);
+        pros::delay(500);
+        igo(drive, turnd, -5, 30, 30);
     }
-    { // TODO: get rear mogo
+    { // get rear mogo
         const double turnd = -90;
+        async.timeout([]() { lift.set_target(0); }, 300);
         iturnb(drive, true, turnd, 360, 300);
-        lift.set_voltage(-12000);
-        pros::delay(900);
-        igo(drive, turnd, 12, 30);
-        clamp.activate();
-        lift.set_target(20);
-    }
-    { // TODO: platform rmogo
-        double turnd = 110;
-        iturn(drive, turnd, 360, 300);
-        lift.set_target(85);
-        take.move_voltage(0);
         pros::delay(200);
-        lift.set_target(70);
-        pros::delay(700);
-        igo(drive, turnd, 15, 30, 30);
+        igo(drive, turnd, 10, 30);
+        clamp.activate();
+        lift.set_target(80);
+    }
+    { // platform rmogo
+        double turnd = 80;
+        iturn(drive, turnd, 360, 300);
+        lift.set_target(80);
+        igo(drive, turnd, 19, 30, 30);
         clamp.deactivate();
-        lift.set_target(95);
+        lift.set_target(75);
         pros::delay(500);
-        igo(drive, turnd, -2, 30, 60); // center with nmogo
+        igo(drive, turnd, -8, 30, 60); // center with nmogo
+    }
+    { // get right far alliance mogo
+        double turnd = 0;
+        iturn(drive, turnd, 360, 500);
+        lift.set_target(0);
+        igo(drive, turnd, -52);
+        // turn to blue mogo
+        turnd = 45;
+        lift.set_voltage(-6000);
+        iturn(drive, turnd);
+        igo(drive, turnd, 12, 45, 100);
+        clamp.activate();
+        pros::delay(200);
+        lift.set_target(20);
+        igo(drive, turnd, -12);
+    }
+    { // get left far alliance mogo
+        double turnd = 0;
+        mogo.deactivate();
+        iturn(drive, turnd);
+        igo(drive, turnd, 70);
 
-        turnd = 90;
-        iturn(drive, turnd, 360, 100);
-        lift.set_target(6);
+        // turn and get mogo
+        turnd = 180;
+        iturnb(drive, true, turnd);
+        igo(drive, turnd, -21, 45, 100);
+        igo(drive, turnd, -4, 45, 30);
+        mogo.activate();
     }
 }
 
-ConsoleSelector autons(Autoselector({
-                                        Auton("SOLOAWP SHKOSH", soloawp),
-                                        Auton("goalrush", goalrush),
-                                        Auton("left rush w/rings", lrushrings),
-                                        Auton("right 2 neutral mogos", trushclamp),
-                                        Auton("right neutral mogo", goalrush),
-                                        Auton("right rush w/rings", rightrushrings),
-                                        Auton("rush with clamp forgot which side probably left", rushclamp),
-                                        Auton("skills", sKILLS),
-                                    },
-                           7),
+ConsoleSelector autons(
+    Autoselector(
+        {
+            Auton("SOLOAWP SHKOSH", soloawp),
+            Auton("goalrush", goalrush),
+            Auton("left rush w/rings", lrushrings),
+            Auton("right 2 neutral mogos", trushclamp),
+            Auton("right neutral mogo", goalrush),
+            Auton("right rush w/rings", rightrushrings),
+            Auton("rush with clamp forgot which side probably left", rushclamp),
+            Auton("skills", sKILLS),
+        },
+        7),
     &console);
