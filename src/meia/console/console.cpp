@@ -140,7 +140,7 @@ namespace meia
                 logs = *io->logs;
                 io->render(*io->logs);
             }
-            pros::delay(10);
+            pros::delay(100);
             // io->mutex->give();
         }
         

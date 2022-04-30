@@ -13,7 +13,7 @@ class Imu {
         void calibrate() {
             std::cout << "calibratey" << std::endl;
             imu.reset();
-            pros::delay(20);
+            pros::delay(200);
             while (imu.is_calibrating()) {
                 pros::delay(500);
             }

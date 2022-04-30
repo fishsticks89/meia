@@ -230,7 +230,7 @@ void sKILLS(meia::ChassisController* drive) {
         pros::delay(200);
         mogo.deactivate(); // leave mogo to be picked up later
         pros::delay(400);
-        igo(drive, turnd, 4, 40, 170); // try to get off rear mogo
+        igo(drive, turnd, 4, 100, 170); // try to get off rear mogo
         pros::delay(200);
         igo(drive, turnd, 13, 30, 70);
         lift.set_target(50);
@@ -249,11 +249,12 @@ void sKILLS(meia::ChassisController* drive) {
         clamp.activate();
     }
     { // platform rmogo & push back bnmogo
-        double turnd = 107;
+        double turnd = 105;
         lift.set_target(85);
         iturn(drive, turnd, 360, 200);
         take.move_voltage(0);
         igo(drive, turnd, 17, 30, 30);
+
         lift.set_target(70);
         pros::delay(200);
         clamp.deactivate();
@@ -261,29 +262,32 @@ void sKILLS(meia::ChassisController* drive) {
         igo(drive, turnd, -2, 30, 60); // center with nmogo
 
         turnd = -90;
-        lift.set_target(0);
+        async.timeout([]() { lift.set_target(0); }, 200);
         iturn(drive, turnd, 360, 500);
         lift.set_target(-3);
 
         // push back bnmogo
         drive->set_pid_constants(400, 0, 200);
         take.move_voltage(12000);
-        igo(drive, turnd, 62, 45, 100);
+        igo(drive, turnd, 59, 45, 100);
         drive->set_pid_constants(drive_pid);
         take.move_voltage(-12000);
         clamp.deactivate();
+        async.timeout([]() { lift.set_voltage(2000); }, 200);
         igo(drive, turnd, -6);
     }
     { // get ramogo & center with rnmogo
-        double turnd = 17;
-        iturnb(drive, false, turnd, 360, 300);
+        double turnd = 20;
+        iturnb(drive, false, turnd, 360, 400);
         lift.set_target(0); // get ready to release mogo
         pros::delay(200);
         lift.set_voltage(-3000); // lower lift
         async.timeout([]() { clamp.deactivate(); take.move_voltage(0); }, 200);
-        igo(drive, turnd, -43, 40, 40);
+        igo(drive, turnd, -46, 30, 40);
         pros::delay(100);
-        igo(drive, turnd, -7.5, 60, 12);
+        igo(drive, turnd, -6, 60, 12);
+        drive->change_target({0.3, 0.3});
+        pros::delay(70);
         mogo.activate();
         pros::delay(200);
 
@@ -291,11 +295,11 @@ void sKILLS(meia::ChassisController* drive) {
 
         // center with nmogo
         iturn(drive, turnd);
-        igo(drive, turnd, 16);
+        igo(drive, turnd, 17.5);
     }
     { // get rnmogo
         double turnd = 90;
-        iturn(drive, turnd, 360, 500);
+        iturn(drive, turnd, 360, 400);
         igo(drive, turnd, 23);
         clamp.activate();
         lift.set_target(35);
@@ -307,6 +311,7 @@ void sKILLS(meia::ChassisController* drive) {
 
         // center with plat
         lift.set_target(95);
+        take.move_voltage(-12000);
         igo(drive, turnd, 50, 45, 50, meia::Pid(6, 0, 0));
         pros::delay(200);
         igo(drive, turnd, -10, 45, 50);
@@ -329,7 +334,7 @@ void sKILLS(meia::ChassisController* drive) {
     }
     { // get rear mogo
         const double turnd = -90;
-        async.timeout([]() { lift.set_target(0); }, 300);
+        async.timeout([]() { lift.set_target(0); }, 500);
         iturnb(drive, true, turnd, 360, 300);
         pros::delay(200);
         igo(drive, turnd, 10, 30);
@@ -350,29 +355,35 @@ void sKILLS(meia::ChassisController* drive) {
         double turnd = 0;
         iturn(drive, turnd, 360, 500);
         lift.set_target(0);
-        igo(drive, turnd, -52);
+        igo(drive, turnd, -51);
         // turn to blue mogo
-        turnd = 45;
+        turnd = 53;
         lift.set_voltage(-6000);
         iturn(drive, turnd);
-        igo(drive, turnd, 12, 45, 100);
+        igo(drive, turnd, 19, 45, 90);
         clamp.activate();
         pros::delay(200);
-        lift.set_target(20);
-        igo(drive, turnd, -12);
+        lift.set_target(10);
+        igo(drive, turnd, -19);
     }
     { // get left far alliance mogo
         double turnd = 0;
         mogo.deactivate();
-        iturn(drive, turnd);
+        iturn(drive, turnd, 360, 500);
         igo(drive, turnd, 70);
 
         // turn and get mogo
         turnd = 180;
         iturnb(drive, true, turnd);
         igo(drive, turnd, -21, 45, 100);
-        igo(drive, turnd, -4, 45, 30);
+        pros::delay(200);
+        igo(drive, turnd, -8, 45, 20);
         mogo.activate();
+        pros::delay(200);
+    }
+    { // stuff
+        double turnd = 45;
+        iturn(drive, -40);
     }
 }
 
@@ -388,5 +399,5 @@ ConsoleSelector autons(
             Auton("rush with clamp forgot which side probably left", rushclamp),
             Auton("skills", sKILLS),
         },
-        7),
+        7), // defaulton
     &console);

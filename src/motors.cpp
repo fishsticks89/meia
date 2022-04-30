@@ -19,7 +19,8 @@ void setupMotors() {
     lift.set_fac(lift.get_motor_fac(36, (60.0/12.0)));
     lift.tare();
     pros::Task([]() { 
-        imu.calibrate(); imucalibrated = true;
+        imu.calibrate();
+        imucalibrated = true;
         std::cout << "lifttemp: " << lift.motor.get_temperature() << std::endl;
     });
 }

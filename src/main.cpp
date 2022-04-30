@@ -37,21 +37,22 @@ void initialize() {
         autons.log();
     },
         nullptr, "water");
-    pros::screen::touch_callback([](int16_t x, int16_t y){
+    pros::screen::touch_callback([](int16_t x, int16_t y) {
         switch (console.to_button(x, y)) {
-            case meia::left:
-                autons.switch_left();
-                break;
-            case meia::right:
-                autons.switch_right();
-                break;
-            case meia::center:
-                console.log("calibrating imu");
-                imu.calibrate();
-                console.log("imu calibrated");
-                break;
+        case meia::left:
+            autons.switch_left();
+            break;
+        case meia::right:
+            autons.switch_right();
+            break;
+        case meia::center:
+            console.log("calibrating imu");
+            imu.calibrate();
+            console.log("imu calibrated");
+            break;
         }
-    },pros::E_TOUCH_PRESSED);
+    },
+        pros::E_TOUCH_PRESSED);
 }
 
 void disabled() {
@@ -70,9 +71,7 @@ void autonomous() {
 
 void opcontrol() {
     mogo.deactivate();
-    // autonomous();
-    // pros::delay(80000);
-    // drive.tare();
+    drive.set_drive_brake(pros::E_MOTOR_BRAKE_COAST);
     ControlScheme control(&con);
     control.addDirectional(
         {pros::E_CONTROLLER_DIGITAL_L1, pros::E_CONTROLLER_DIGITAL_L2},
@@ -90,7 +89,7 @@ void opcontrol() {
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_X, [](bool act) { mogo.set(act); });   // sets the mogo to toggled state
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_A, [](bool act) { shtick.set(act); }); // sets the shtick to toggled state
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_Y, [](bool act) { hpost.set(act); });  // sets the high post mech to toggled state
-    // control.addToggleable(pros::E_CONTROLLER_DIGITAL_B, [](bool act) { drive.set_drive_brake((act) ? pros::E_MOTOR_BRAKE_BRAKE : pros::E_MOTOR_BRAKE_COAST); });
+    control.addToggleable(pros::E_CONTROLLER_DIGITAL_B, [](bool act) { drive.set_drive_brake((act) ? pros::E_MOTOR_BRAKE_BRAKE : pros::E_MOTOR_BRAKE_COAST); });
     while (true) {
         control();
         drive.tank_control(&con, pros::E_MOTOR_BRAKE_COAST, 3.2); // controller, brake mode, curve intensity

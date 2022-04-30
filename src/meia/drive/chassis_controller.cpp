@@ -40,6 +40,9 @@ namespace meia {
         pid_task_messenger.chassis_ptr->tare_motors();
         pid_task_messenger.mutex.give();
     }
+    void ChassisController::set_drive_brake(pros::motor_brake_mode_e_t input) {
+        chassis.set_drive_brake(input);
+    }
 
     //! Set PID
     void ChassisController::change_target(std::pair<double, double> deltatarget) {

@@ -292,7 +292,7 @@ namespace meia {
                 chassis, [&](int time, int delta_time) -> bool {
                     const double error = pidloop(delta_time);
                     // within 3 deg of target and < 2 deg speed
-                    bool should_continue = (std::abs(error) > 3 || std::abs(error - preverr) > ((2 / 1000.0) * delta_time)) && ((pros::millis() - settlestart < 1000) && std::abs(error) > 6);
+                    bool should_continue = (std::abs(error) > 3 || std::abs(error - preverr) > ((2 / 1000.0) * delta_time));
                     preverr = error;
                     return should_continue;
                 });
