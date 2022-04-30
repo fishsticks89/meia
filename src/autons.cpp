@@ -11,7 +11,7 @@ void turn(meia::ChassisController* drive, double amount, double speed = 360, dou
     meia::p::turn(drive, amount * (((ispos > 0) - 0.5) * 2), speed, acc, drive_width);
 }
 
-void arcturn(meia::ChassisController* drive, bool left, double amount, double speed = 180, double acc = 360) {
+void arcturn(meia::ChassisController* drive, bool left, double amount, double speed = 180, double acc = 720) {
     bool ispos = amount > 0;
     amount = std::abs(amount);
     if ((speed / acc) * speed > amount) {
@@ -28,7 +28,7 @@ void go(meia::ChassisController* drive, double amount, double speed = 45, double
     meia::p::debting_go(drive, amount, speed, acc);
 }
 
-void igo(meia::ChassisController* drive, double heading_target, double amount, double speed = 45, double acc = 130, meia::Pid heading_pd = meia::Pid(0.2, 0, 0)) {
+void igo(meia::ChassisController* drive, double heading_target, double amount, double speed = 45, double acc = 130, meia::Pid heading_pd = meia::Pid(4, 0, 0)) {
     heading_target = imu.wrap(heading_target);
     std::cout << std::sqrt(amount * acc * 2) - 0.05 << std::endl;
     if ((speed / acc) * (speed / 2) > amount) {
@@ -204,88 +204,86 @@ void sKILLS(meia::ChassisController* drive) {
         pros::delay(1500);
         go(drive, -3, 20, 8);
         mogo.activate();
+        pros::delay(100);
     }
-    { // get neutral goal
-        const double turnd = 101;
-        arcturn(drive, true, turnd, 100);
+    { // get neutral goal and get nmogo and go to platform
+        double turnd = 104;
+        arcturn(drive, true, turnd, 160, 400);
         clamp.deactivate();
         lift.set_voltage(-4000);
 
         igo(drive, turnd, 39);
         clamp.activate();
         lift.set_target(20);
-        igo(drive, turnd, 40.5, 45, 80);
-    }
-    { // get rings
-        const double turnd = 180;
-        iturn(drive, turnd, 90, 400);
+
+        turnd = 135;
+        iturn(drive, turnd, 360, 500);
         lift.set_target(95);
-        igo(drive, turnd, 20, 30);
-        take.move_voltage(12000);
-        igo(drive, turnd, 15, 10);
-        igo(drive, turnd, -8);
+        igo(drive, turnd, 48, 45, 80);
     }
     { // platform nmogo
         double turnd = 90;
         iturn(drive, turnd, 90, 400);
         pros::delay(200);
         mogo.deactivate(); // leave mogo to be picked up later
-        pros::delay(500);
-        take.move_voltage(0);
-        pros::delay(200);
-        igo(drive, turnd, 4, 30, 50); // try to get off rear mogo
-        igo(drive, turnd, 8, 30, 50);
-        lift.set_target(50);
         pros::delay(700);
-        clamp.deactivate();
-        lift.set_target(65);
+        igo(drive, turnd, 4, 40, 130); // try to get off rear mogo
+        pros::delay(170);
+        igo(drive, turnd, 13, 30, 100);
+        lift.set_target(50);
         pros::delay(800);
-        igo(drive, turnd, -2, 30);
+        clamp.deactivate();
+        lift.set_target(95);
+        pros::delay(450);
+        igo(drive, turnd, -3, 30);
     }
     { // fclamp rmogo
         const double turnd = -90;
-        iturnb(drive, true, turnd, 360, 300);
-        lift.set_voltage(-12000);
-        pros::delay(900);
+        async.timeout([]() { lift.set_voltage(-12000); }, 500);
+        iturnb(drive, true, turnd, 360, 200);
+        pros::delay(300);
         igo(drive, turnd, 10, 30);
         clamp.activate();
-        lift.set_target(20);
     }
     { // platform rmogo & push back bnmogo
-        double turnd = 110;
-        iturn(drive, turnd, 360, 300);
+        double turnd = 107;
         lift.set_target(85);
+        iturn(drive, turnd, 360, 200);
         take.move_voltage(0);
-        pros::delay(200);
-        lift.set_target(70);
-        pros::delay(700);
         igo(drive, turnd, 15, 30, 30);
+        lift.set_target(70);
+        pros::delay(200);
         clamp.deactivate();
-        lift.set_target(95);
         pros::delay(500);
-        igo(drive, turnd, -2, 30, 60); // center with nmogo
+        lift.set_target(95);
+        // igo(drive, turnd, -9, 30, 60); // center with nmogo
 
-        turnd = 90;
-        iturn(drive, turnd, 360, 100);
-        lift.set_target(6);
+        turnd = -90;
+        lift.set_target(0);
+        iturn(drive, turnd, 360, 300);
+        lift.set_target(-3);
 
         // push back bnmogo
         mogo.activate();
         drive->set_pid_constants(400, 0, 200);
-        igo(drive, turnd, -58, 45, 12);
+        async.timeout([]() { clamp.activate(); lift.set_target(30); }, 700);
+        igo(drive, turnd, 56, 45, 30);
         drive->set_pid_constants(drive_pid);
-        igo(drive, turnd, 4, 20, 50);
+        igo(drive, turnd, -4, 20, 50);
     }
     { // go get the ramogo & center with rnmogo
-        double turnd = -150;
-        iturnb(drive, false, turnd);
+        double turnd = 20;
+        iturnb(drive, false, turnd, 360, 300);
         mogo.deactivate();
-        igo(drive, turnd, 45);
+        lift.set_target(0); // get ready to release mogo
+        pros::delay(200);
+        async.timeout([]() { clamp.deactivate(); }, 400);
+        igo(drive, turnd, -10);
         turnd = 0;
         iturn(drive, turnd, 360, 200);
         lift.set_voltage(-3000); // lower lift
-        igo(drive, turnd, -5);
-        igo(drive, turnd, -4, 20, 8);
+        igo(drive, turnd, -38);
+        igo(drive, turnd, -3, 20, 8);
         mogo.activate();
         pros::delay(200);
 
@@ -360,13 +358,14 @@ void auton(meia::ChassisController* drive) {
 }
 
 ConsoleSelector autons(Autoselector({
-                           Auton("SOLOAWP SHKOSH", soloawp),
-                           Auton("goalrush", goalrush),
-                           Auton("left rush w/rings", lrushrings),
-                           Auton("right 2 neutral mogos", trushclamp),
-                           Auton("right neutral mogo", goalrush),
-                           Auton("right rush w/rings", rightrushrings),
-                           Auton("rush with clamp forgot which side probably left", rushclamp),
-                           Auton("skills", sKILLS),
-                       }, 7),
+                                        Auton("SOLOAWP SHKOSH", soloawp),
+                                        Auton("goalrush", goalrush),
+                                        Auton("left rush w/rings", lrushrings),
+                                        Auton("right 2 neutral mogos", trushclamp),
+                                        Auton("right neutral mogo", goalrush),
+                                        Auton("right rush w/rings", rightrushrings),
+                                        Auton("rush with clamp forgot which side probably left", rushclamp),
+                                        Auton("skills", sKILLS),
+                                    },
+                           7),
     &console);

@@ -6,6 +6,7 @@ pros::Motor take(9);
 bool imucalibrated = false;
 
 meia::Console console;
+Async async;
 
 void awaitCalibrate() {
     while (!imucalibrated) {

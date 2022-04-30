@@ -75,6 +75,7 @@ void opcontrol(void);
  * You can add C++-only headers here
  */
 //#include <iostream>
+#include "set_timeout.hpp"
 #include "controlutil.hpp"
 #include "pneumaticutil.hpp"
 #include "motorutil.hpp"

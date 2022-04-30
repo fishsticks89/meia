@@ -292,7 +292,7 @@ namespace meia {
                 chassis, [&](int time, int delta_time) -> bool {
                     const double error = pidloop(delta_time);
                     // within 3 deg of target and < 2 deg speed
-                    bool should_continue = (std::abs(error) > 3 || std::abs(error - preverr) > ((2 / 1000.0) * delta_time)) && (pros::millis() - settlestart < 1000);
+                    bool should_continue = (std::abs(error) > 3 || std::abs(error - preverr) > ((2 / 1000.0) * delta_time)) && ((pros::millis() - settlestart < 1000) && std::abs(error) > 6);
                     preverr = error;
                     return should_continue;
                 });
@@ -303,14 +303,18 @@ namespace meia {
             const int acc_time = (speed / decel) * 1000.0;
             double cruise_dist = (std::abs(amount) - ((acc_time / 1000.0) * speed / 2.0));
             bool ispos = amount > 0;
-            double preverr = 0;
-            std::function<void(double)> pidloop = [&](double delta_time) {
+            double prev_theoretical_err = 0;
+            std::function<double(double)> pidloop = [&](double delta_time) -> double {
                 delta_time /= 1000;
-                const double err = imu->get_dist(heading_target);
-                const double deltatarget = ((heading_pd.p * err) + (heading_pd.d * (err - preverr)) * (drive_width * m_pi)) * delta_time;
-                preverr = err;
-                // std::cout << "deltatarg: " << deltatarget << std::endl;
+                const double err = imu->get_dist(imu->wrap(heading_target));
+                auto chassis_err = chassis->get_error_in();
+                double theoretical_error = err + (((chassis_err.second - chassis_err.first) / (drive_width * m_pi)) * 360);
+                theoretical_error = imu->wrap(theoretical_error);
+                const double deltatarget = ((heading_pd.p * theoretical_error) + (heading_pd.d * (theoretical_error - prev_theoretical_err)) * (drive_width * m_pi)) * delta_time;
+                prev_theoretical_err = theoretical_error;
+                std::cout << "theo: " << theoretical_error << " acc: " << err << " diff: " << err - theoretical_error << " derr: " << chassis_err.second << std::endl;
                 chassis->change_target({deltatarget, -deltatarget});
+                return err;
             };
             if (cruise_dist < 0) {
                 std::cout << "7ee" << std::endl;

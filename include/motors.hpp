@@ -13,3 +13,4 @@ extern Pneumatic shtick;
 extern Pneumatic hpost;
 
 extern meia::Console console;
+extern Async async;
