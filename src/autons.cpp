@@ -278,11 +278,11 @@ void sKILLS(meia::ChassisController* drive) {
         lift.set_target(0); // get ready to release mogo
         pros::delay(200);
         async.timeout([]() { clamp.deactivate(); }, 400);
-        igo(drive, turnd, -10);
+        igo(drive, turnd, -20);
         turnd = 0;
         iturn(drive, turnd, 360, 200);
         lift.set_voltage(-3000); // lower lift
-        igo(drive, turnd, -38);
+        igo(drive, turnd, -26);
         igo(drive, turnd, -3, 20, 8);
         mogo.activate();
         pros::delay(200);
@@ -290,7 +290,7 @@ void sKILLS(meia::ChassisController* drive) {
         // center with nmogo
         igo(drive, turnd, 14);
     }
-    { // get rnmogo
+    { // TODO: get rnmogo
         double turnd = 90;
         iturn(drive, turnd, 360, 500);
         igo(drive, turnd, 24);
@@ -309,7 +309,7 @@ void sKILLS(meia::ChassisController* drive) {
         igo(drive, turnd, -10, 45, 50);
         pros::delay(200);
     }
-    { // platform rnmogo
+    { // TODO: platform rnmogo
         double turnd = 90;
         iturn(drive, turnd, 360, 500);
         mogo.deactivate();
@@ -324,7 +324,7 @@ void sKILLS(meia::ChassisController* drive) {
         lift.set_target(95);
         pros::delay(500);
     }
-    { // get rear mogo
+    { // TODO: get rear mogo
         const double turnd = -90;
         iturnb(drive, true, turnd, 360, 300);
         lift.set_voltage(-12000);
@@ -333,7 +333,7 @@ void sKILLS(meia::ChassisController* drive) {
         clamp.activate();
         lift.set_target(20);
     }
-    { // platform rmogo
+    { // TODO: platform rmogo
         double turnd = 110;
         iturn(drive, turnd, 360, 300);
         lift.set_target(85);
@@ -351,10 +351,6 @@ void sKILLS(meia::ChassisController* drive) {
         iturn(drive, turnd, 360, 100);
         lift.set_target(6);
     }
-}
-
-void auton(meia::ChassisController* drive) {
-    sKILLS(drive);
 }
 
 ConsoleSelector autons(Autoselector({
