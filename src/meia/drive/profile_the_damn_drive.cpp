@@ -26,6 +26,7 @@ namespace meia {
             return 0;
         }
         double go(ChassisController* chassis, double amount, double speed, double acc) {
+            std::cout << "go" << std::endl;
             const int acc_time = (speed / acc) * 1000;                                         // ms
             const int cruise_time = ((amount - ((acc_time / 1000.0) * speed)) / speed) * 1000; // ms
             if (cruise_time < 0) {
@@ -58,6 +59,7 @@ namespace meia {
             return 0;
         }
         double turn(ChassisController* chassis, double amount, double speed, double acc, double drive_width) {
+            std::cout << "turn" << std::endl;
             const double amount_in = (amount / 360.0) * (drive_width * m_pi);
             const double speed_in = (speed / 360.0) * (drive_width * m_pi);
             const double acc_in = (acc / 360.0) * (drive_width * m_pi);
@@ -99,6 +101,7 @@ namespace meia {
             return 0;
         }
         double arcturn(ChassisController* chassis, bool left, double amount, double speed, double acc, double drive_width) {
+            std::cout << "arcturn" << std::endl;
             const double amount_in = (amount / 360.0) * (drive_width * m_pi);
             const double speed_in = (speed / 360.0) * (drive_width * m_pi);
             const double acc_in = (acc / 360.0) * (drive_width * m_pi);
@@ -153,6 +156,7 @@ namespace meia {
         }
 
         double debting_go(ChassisController* chassis, double amount, double speed, double decel) {
+            std::cout << "dgo" << std::endl;
             double debt = 0;
             const int acc_time = (speed / decel) * 1000.0;
             double cruise_dist = (std::abs(amount) - ((acc_time / 1000.0) * speed / 2.0));
@@ -186,6 +190,7 @@ namespace meia {
             return debt;
         }
         double debting_turn(ChassisController* chassis, double amount, double speed, double decel, double drive_width) {
+            std::cout << "dturn" << std::endl;
             const double amount_in = (amount / 360.0) * (drive_width * m_pi);
             const double speed_in = (speed / 360.0) * (drive_width * m_pi);
             const double decel_in = (decel / 360.0) * (drive_width * m_pi);
@@ -230,6 +235,7 @@ namespace meia {
         }
 
         void imuturn(meia::ChassisController* chassis, bool left, Imu* imu, double target, double speed, double acc, double drive_width, meia::Pid pd) {
+            std::cout << "imuturn" << std::endl;
             target = imu->wrap(target);
             double amount = imu->get_dist(left, target);
             std::cout << "speed: " << speed << "acc: " << acc << std::endl;
@@ -299,6 +305,7 @@ namespace meia {
             std::cout << "Settletime " << pros::millis() - settlestart << std::endl;
         }
         double debting_go_heading_corr(ChassisController* chassis, Imu* imu, double amount, double speed, double decel, meia::Pid heading_pd, const double heading_target, const double drive_width) {
+            std::cout << "dgo headingcorr" << std::endl;
             double debt = 0;
             const int acc_time = (speed / decel) * 1000.0;
             double cruise_dist = (std::abs(amount) - ((acc_time / 1000.0) * speed / 2.0));

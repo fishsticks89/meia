@@ -21,7 +21,7 @@ void arcturn(meia::ChassisController* drive, bool left, double amount, double sp
 }
 
 void go(meia::ChassisController* drive, double amount, double speed = 45, double acc = 130) {
-    std::cout << std::sqrt(amount * acc * 2) - 0.05 << std::endl;
+    std::cout << "max_speed(in/sec_<from go>: " << std::sqrt(std::abs(amount * acc * 2)) - 0.05 << std::endl;
     if ((speed / acc) * (speed / 2) > amount) {
         speed = std::sqrt(std::abs(amount * acc * 2)) - 0.05;
     }
@@ -56,17 +56,31 @@ void iturn(meia::ChassisController* drive, double target, double speed = 360, do
 }
 
 void goalrush(meia::ChassisController* drive) {
+    int x = pros::millis();
     shtick.activate();
-    std::cout << meia::p::debting_go(drive, 34, 70, 240) << std::endl;
-    std::cout << meia::p::debting_go(drive, -34, 70, 240) << std::endl;
+    std::cout << meia::p::debting_go(drive, 35, 70, 240) << std::endl;
+    std::cout << meia::p::debting_go(drive, -35, 70, 240) << std::endl;
+    std::cout << "time: " << pros::millis() - x << std::endl;
+    if (pros::millis() - x > 2700) {
+        while (true) {
+            std::cout << meia::p::debting_go(drive, -35, 70, 240) << std::endl;
+        }
+    }
 }
 
 void rightrushrings(meia::ChassisController* drive) {
     mogo.deactivate();
     shtick.activate();
     // shtick nmogo
+    int start_time = pros::millis();
     std::cout << meia::p::debting_go(drive, 34, 60, 150) << std::endl;
     std::cout << meia::p::debting_go(drive, -34, 60, 90) << std::endl;
+    std::cout << "time: " << pros::millis() - start_time << std::endl;
+    if (pros::millis() - start_time > 2700) {
+        while (true) {
+            std::cout << meia::p::debting_go(drive, -35, 70, 240) << std::endl;
+        }
+    }
     drive->set_pid_constants(drive_pid);
     lift.set_voltage(-4000);
     clamp.deactivate();
@@ -160,37 +174,41 @@ void trushclamp(meia::ChassisController* drive) {
 }
 
 void soloawp(meia::ChassisController* drive) {
+    double turnd = 0;
     mogo.deactivate();
     drive_width = 14.1;
-    lift.set_target(35);
-    pros::delay(600);
-    go(drive, 4);
+    lift.set_p(meia::Pid(500.0, 0, 0));
+    lift.set_target(27.5);
+    pros::delay(400);
+    go(drive, 2);
+    pros::delay(200);
     clamp.deactivate();
+    lift.set_p(lift_pid);
     pros::delay(500);
     go(drive, -5, 45, 30);
     lift.set_voltage(-9000);
     turn(drive, 90, 200);
     // go out
-    go(drive, -15.5, 20, 30);
-    drive->set_pid_constants(300, 0, 90);
-    pros::delay(100);
-    drive->set_pid_constants(drive_pid);
+    go(drive, -15.5);
     // turn before length
-    turn(drive, imu.get_dist(true, -5), 220, 500);
+    turnd = -4;
+    iturn(drive, turnd, 220, 500);
     std::cout << "imudist: " << imu.get_dist(true, 0) << std::endl;
-    go(drive, 70);
+    igo(drive, turnd, 70);
     // get amogo
-    turn(drive, imu.get_dist(false, 180), 220, 500);
-    go(drive, -32.5, 20, 60);
+    turn(drive, imu.get_dist(false, 180), 220, 300);
+    go(drive, -26, 30, 60);
+    pros::delay(200);
+    go(drive, -6, 5, 14);
     pros::delay(100);
     mogo.activate();
     pros::delay(200);
     take.move_voltage(12000);
-    go(drive, 22, 45, 30);
+    go(drive, 22, 46, 37);
     // get big nmogo
     turn(drive, imu.get_dist(false, -180 + 50));
     clamp.deactivate();
-    std::cout << meia::p::debting_go(drive, 34, 60, 160) << std::endl;
+    std::cout << meia::p::debting_go(drive, 33.7, 60, 160) << std::endl;
     clamp.activate();
     pros::delay(200);
     mogo.deactivate();
@@ -268,8 +286,9 @@ void sKILLS(meia::ChassisController* drive) {
 
         // push back bnmogo
         drive->set_pid_constants(400, 0, 200);
+        async.timeout([]() { clamp.activate(); lift.set_target(80); }, 700);
         take.move_voltage(12000);
-        igo(drive, turnd, 59, 45, 100);
+        igo(drive, turnd, 64, 45, 100);
         drive->set_pid_constants(drive_pid);
         take.move_voltage(-12000);
         clamp.deactivate();
@@ -391,13 +410,12 @@ ConsoleSelector autons(
     Autoselector(
         {
             Auton("SOLOAWP SHKOSH", soloawp),
-            Auton("goalrush", goalrush),
-            Auton("left rush w/rings", lrushrings),
-            Auton("right 2 neutral mogos", trushclamp),
-            Auton("right neutral mogo", goalrush),
-            Auton("right rush w/rings", rightrushrings),
+            Auton("rush w/shtick both sides", goalrush),
+            Auton("left shtick rush w/rings", lrushrings),
+            Auton("right shtick rush w/rings", rightrushrings),
+            Auton("right shtick rush nmogo and right", trushclamp),
             Auton("rush with clamp forgot which side probably left", rushclamp),
             Auton("skills", sKILLS),
         },
-        7), // defaulton
+        4), // defaulton
     &console);

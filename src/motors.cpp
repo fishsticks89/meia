@@ -1,7 +1,8 @@
 #include "main.h"
 meia::Pid drive_pid (200, 0, 90);
 Imu imu (11);
-Motor lift(1, true, meia::Pid(5000.0, 0, 0));
+meia::Pid lift_pid (5000.0, 0, 0);
+Motor lift(1, true, lift_pid);
 pros::Motor take(9);
 bool imucalibrated = false;
 

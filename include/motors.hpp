@@ -1,6 +1,7 @@
 #include "main.h"
 extern meia::Pid drive_pid;
 extern pros::Motor take;
+extern meia::Pid lift_pid;
 extern Motor lift;
 extern Imu imu;
 

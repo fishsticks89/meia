@@ -38,6 +38,8 @@ namespace meia {
         pid_task_messenger.reset = true;
         pid_task_messenger.chassis_ptr->set_voltage({0, 0});
         pid_task_messenger.chassis_ptr->tare_motors();
+        pid_task_messenger.left_target = 0;
+        pid_task_messenger.right_target = 0;
         pid_task_messenger.mutex.give();
     }
     void ChassisController::set_drive_brake(pros::motor_brake_mode_e_t input) {
@@ -49,8 +51,10 @@ namespace meia {
         pid_task_messenger.mutex.take(3000);
         // reset if nessessary
         if (pid_task_messenger.reset == true) {
-            pid_task_messenger.left_target = chassis.get_motor_positions().first * pid_task_messenger.ticks_per_inch;
-            pid_task_messenger.right_target = chassis.get_motor_positions().second * pid_task_messenger.ticks_per_inch;
+            //! uncomment for tare after tare
+            // pid_task_messenger.left_target = chassis.get_motor_positions().first / pid_task_messenger.ticks_per_inch;
+            // pid_task_messenger.right_target = chassis.get_motor_positions().second / pid_task_messenger.ticks_per_inch;
+            pid_task_messenger.reset = false;
         }
         pid_task_messenger.chassis_ptr->set_drive_brake(pros::E_MOTOR_BRAKE_BRAKE);
         pid_loop_task.resume();
@@ -156,9 +160,9 @@ namespace meia {
             // {
             //     const int time = pros::millis();
             //     if ((time - (time % delta_time)) % 200 == 0) {
-            //         std::cout << "pid - targeet: " << io->left_target << std::endl;
+            //         std::cout << "pid - targeet: " << io->left_target << ", " << io->right_target << std::endl;
             //         std::cout << "pid - tpi: " << io->ticks_per_inch << std::endl;
-            //         std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first / io->ticks_per_inch) << std::endl;
+            //         std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first / io->ticks_per_inch) << ", " << dub_to_string(pid_info.motor_positions.second / io->ticks_per_inch) << std::endl;
             //         std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
             //     }
             // }

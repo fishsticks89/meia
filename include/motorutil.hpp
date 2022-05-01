@@ -54,4 +54,7 @@ class Motor {
         int get_temp() {
             return motor.get_temperature();
         }
+        void set_p(meia::Pid oink) {
+            p = oink;
+        }
 };

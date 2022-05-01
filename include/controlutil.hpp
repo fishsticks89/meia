@@ -1,5 +1,5 @@
 #include "main.h"
-using void_fn = void (*)(void);
+using void_fn = std::function<void()>;
 using bool_fn = std::function<void(bool)>;
 struct directional_fn {
     void_fn first_pressing;
