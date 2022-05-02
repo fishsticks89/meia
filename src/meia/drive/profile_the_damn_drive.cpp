@@ -7,6 +7,15 @@ double getBigger(std::pair<double, double> e) {
 std::pair<double, double> multiply(std::pair<double, double> a, double b) {
     return {a.first * b, a.second * b};
 }
+void periodiclog(std::string tt, int interval = 1000) {
+    int t = pros::millis();
+    if ((t - (t % 5)) % interval == 0) {
+        std::cout << tt << std::endl;
+    }
+}
+void periodiclog(double tt, int interval = 1000) {
+    periodiclog(std::to_string(tt), interval);
+}
 
 namespace meia {
     namespace p {
@@ -227,13 +236,6 @@ namespace meia {
             return debt;
         }
 
-        void logtarg(std::string tt) {
-            int t = pros::millis();
-            if ((t - (t % 5)) % 1000 == 0) {
-                std::cout << tt << std::endl;
-            }
-        }
-
         void imuturn(meia::ChassisController* chassis, bool left, Imu* imu, double target, double speed, double acc, double drive_width, meia::Pid pd) {
             std::cout << "imuturn" << std::endl;
             target = imu->wrap(target);
@@ -331,7 +333,7 @@ namespace meia {
             profileuntil(
                 chassis, [&](int time, int delta_time) -> bool {
                     double increment = (speed / 1000.0) * delta_time;
-                    const double overature = (getBigger(multiply(chassis->get_error_legacy(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
+                    const double overature = (getBigger(multiply(chassis->get_error_in(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
                     if (overature > 0) {
                         increment -= overature;
                         debt += overature;
@@ -339,6 +341,7 @@ namespace meia {
                     cruise_dist -= increment;
                     pidloop(delta_time);
                     chassis->change_target({increment * get_fac(ispos), increment * get_fac(ispos)});
+                    periodiclog(increment * get_fac(ispos), 200);
                     return (cruise_dist > 0);
                 });
             chassis->allowderivative(true);
