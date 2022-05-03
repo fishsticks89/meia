@@ -24,7 +24,7 @@ class Async {
             }
         }
     public: 
-        Async() : task(task_fn, &jobs,"bob") {}
+        Async(const char* name) : task(task_fn, &jobs, name) {}
         void add_job(AsyncJob job) {
             jobs.push_back(job);
         }

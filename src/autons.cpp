@@ -163,7 +163,7 @@ void trushclamp(meia::ChassisController* drive) {
     lift.set_voltage(-2000);
     clamp.deactivate();
     int x = pros::millis();
-    std::cout << meia::p::debting_go(drive, 54.5, 60, 240) << std::endl;
+    std::cout << igo(drive, 0, 54.5, 60, 240) << std::endl;
     std::cout << "time: " << pros::millis() - x << std::endl;
     if (pros::millis() - x > 3200) {
         while (true) {
@@ -433,5 +433,5 @@ ConsoleSelector autons(
             Auton("skills", sKILLS),                                             // TODONE?
             Auton("stupod", stupod),                                             // !!! STUPOD !!!
         },
-        6), // defaulton
+        4), // defaulton
     &console);

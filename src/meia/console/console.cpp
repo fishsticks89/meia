@@ -3,7 +3,7 @@
 namespace meia
 {
     static const int maincolor = RGB2COLOR(255, 255, 255);
-    static const int accentcolor = RGB2COLOR(31, 97, 232);
+    static const int accentcolor = RGB2COLOR(255, 39, 48);
     static const int lineheight = 25;
     static const int breaklineoffset = 10;
     void Console::logs_struct::clear()
@@ -56,7 +56,7 @@ namespace meia
     {
         logs_struct::clear();
         auto whitels = white();
-        auto bluels = blue();
+        auto redls = red();
         int i = 0;
         bool draw = false;
         pros::screen::set_pen(RGB2COLOR(0, 0, 0));
@@ -64,7 +64,7 @@ namespace meia
         pros::screen::set_pen(maincolor);
         for (int x = 0; x <= 480; x++)
         {
-            for (int y = 0; y <= 272; y++)
+            for (int y = 0; y <= 240; y++)
             {
                 if (std::pair<int_fast16_t, int_fast16_t>{whitels[i].first.first, whitels[i].first.second} == std::pair<int_fast16_t, int_fast16_t>{x, y})
                 {
@@ -80,11 +80,11 @@ namespace meia
         pros::screen::set_pen(accentcolor);
         for (int x = 0; x <= 480; x++)
         {
-            for (int y = 0; y <= 272; y++)
+            for (int y = 0; y <= 240; y++)
             {
-                if (std::pair<int_fast16_t, int_fast16_t>{bluels[i].first.first, bluels[i].first.second} == std::pair<int_fast16_t, int_fast16_t>{x, y})
+                if (std::pair<int_fast16_t, int_fast16_t>{redls[i].first.first, redls[i].first.second} == std::pair<int_fast16_t, int_fast16_t>{x, y})
                 {
-                    draw = bluels[i].second;
+                    draw = redls[i].second;
                     i++;
                 }
                 if (draw)
