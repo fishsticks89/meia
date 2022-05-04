@@ -14,7 +14,7 @@ namespace meia {
                 logs_struct(pros::Mutex* mutex, std::vector<std::pair<std::string, bool>>* logs) : mutex(mutex), logs(logs) {};
             };
             std::vector<std::pair<std::string, bool>> logs = {};
-            static std::vector<std::pair<std::pair<int_fast16_t, int_fast16_t>, bool>> white();
+            static std::vector<std::pair<std::pair<uint16_t, uint8_t>, bool>> white();
             static std::vector<std::pair<std::pair<int_fast16_t, int_fast16_t>, bool>> red();
             void logo();
             static void task_fn(void*);

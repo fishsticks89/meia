@@ -35,6 +35,11 @@ void initialize() {
         // }
         pros::delay(3000);
         autons.log();
+
+        while (true) {
+            pros::delay(8000);
+            console.init();
+        }
     },
         nullptr, "water");
     pros::screen::touch_callback([](int16_t x, int16_t y) {
@@ -85,11 +90,11 @@ void opcontrol() {
         []() { take.move_voltage(0); }       // if neither are pressing
     );
     mogo.deactivate();
-    control.addButton(pros::E_CONTROLLER_DIGITAL_X, []() { mogo.toggle(); });    // sets the mogo to toggled state
-    control.addButton(pros::E_CONTROLLER_DIGITAL_R2, []() { clamp.toggle(); });  // sets the clamp to toggled state
-    control.addButton(pros::E_CONTROLLER_DIGITAL_A, []() { shtick.toggle(); });  // sets the shtick to toggled state
-    control.addButton(pros::E_CONTROLLER_DIGITAL_UP, []() { shtick.toggle(); }); // sets the shtick to toggled state
-    control.addButton(pros::E_CONTROLLER_DIGITAL_Y, []() { hpost.toggle(); });   // sets the high post mech to toggled state
+    control.addButton(pros::E_CONTROLLER_DIGITAL_X, []() { mogo.toggle(); });       // sets the mogo to toggled state
+    control.addButton(pros::E_CONTROLLER_DIGITAL_R2, []() { clamp.toggle(); });     // sets the clamp to toggled state
+    control.addButton(pros::E_CONTROLLER_DIGITAL_A, []() { shtick.toggle(); });     // sets the shtick to toggled state
+    control.addButton(pros::E_CONTROLLER_DIGITAL_RIGHT, []() { shtick.toggle(); }); // sets the shtick to toggled state
+    control.addButton(pros::E_CONTROLLER_DIGITAL_Y, []() { hpost.toggle(); });      // sets the high post mech to toggled state
     drive.set_drive_brake(pros::E_MOTOR_BRAKE_COAST);
     control.addToggleable(pros::E_CONTROLLER_DIGITAL_B, [](bool act) { drive.set_drive_brake((act) ? pros::E_MOTOR_BRAKE_BRAKE : pros::E_MOTOR_BRAKE_COAST); });
     while (true) {

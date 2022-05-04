@@ -22,12 +22,13 @@
             }];
             let iscolor;
             let thereturn;
-            for (x = 1; x <= 480; x++) {
-                for (y = 1; y <= 240; y++) {
+            for (x = 1; x < 480; x++) {
+                for (y = 1; y < 240; y++) {
                     thereturn = ctx.getImageData(x, y, 1, 1).data;
                     // console.log(thereturn);
                     // untrue if blue
-                    iscolor = (false) ? (thereturn[0] > 100 && thereturn[2] > 100) : ((20 < thereturn[1] && thereturn[1] < 50) && (200 < thereturn[0] && thereturn[0] < 300));
+                    iscolor = (true) ? (thereturn[0] > 100 && thereturn[2] > 100) : ((20 < thereturn[1] && thereturn[1] < 50) && (200 < thereturn[0] && thereturn[0] < 300));
+                    iscolor = !iscolor;
                     if (color[color.length - 1].true != iscolor)
                         color.push({
                             px: {

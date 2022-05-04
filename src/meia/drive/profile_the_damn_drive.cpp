@@ -179,6 +179,7 @@ namespace meia {
                 chassis, [&](int time, int delta_time) -> bool {
                     double increment = (speed / 1000.0) * delta_time;
                     const double overature = (getBigger(multiply(chassis->get_error_legacy(), get_fac(ispos))) * chassis->get_p_constant() - 135) / chassis->get_p_constant(); // 135 instead of 127 to ensure always some overature
+                    periodiclog("ov: " + std::to_string(overature));
                     if (overature > 0) {
                         increment -= overature;
                         debt += overature;

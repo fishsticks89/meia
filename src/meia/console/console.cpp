@@ -6,6 +6,7 @@ namespace meia
     static const int accentcolor = RGB2COLOR(255, 39, 48);
     static const int lineheight = 25;
     static const int breaklineoffset = 10;
+    
     void Console::logs_struct::clear()
     {
         if (pros::lcd::is_initialized() == true)

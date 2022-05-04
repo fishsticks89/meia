@@ -262,14 +262,14 @@ void sKILLS(meia::ChassisController* drive) {
         pros::delay(400);
         igo(drive, turnd, 4, 100, 170); // try to get off rear mogo
         pros::delay(200);
-        igo(drive, turnd, 13, 30, 70);
+        igo(drive, turnd, 15, 30, 70);
         lift.set_target(50);
         pros::delay(700);
         clamp.deactivate();
         pros::delay(100);
         lift.set_target(95);
         pros::delay(450);
-        igo(drive, turnd, -3, 30);
+        igo(drive, turnd, -5, 30);
     }
     { // fclamp rmogo
         const double turnd = -90;
@@ -292,7 +292,8 @@ void sKILLS(meia::ChassisController* drive) {
         // igo(drive, turnd, -2, 30, 60); // center with nmogo
 
         turnd = -90;
-        async.timeout([]() { lift.set_target(0); }, 200);
+        lift.set_target(85);
+        async.timeout([]() { lift.set_target(0); }, 350);
         iturn(drive, turnd, 360, 500);
         lift.set_target(-3);
 
@@ -307,12 +308,12 @@ void sKILLS(meia::ChassisController* drive) {
         igo(drive, turnd, -6);
     }
     { // get ramogo & center with rnmogo
-        double turnd = 12;
+        double turnd = 19;
         iturnb(drive, false, turnd, 360, 400);
         lift.set_target(0); // get ready to release mogo
         pros::delay(200);
         lift.set_voltage(-3000); // lower lift
-        igo(drive, turnd, -52, 30, 40);
+        igo(drive, turnd, -49, 30, 40);
         pros::delay(100);
         igo(drive, turnd, -6, 60, 12);
         pros::delay(70);
@@ -323,7 +324,7 @@ void sKILLS(meia::ChassisController* drive) {
 
         // center with nmogo
         iturn(drive, turnd);
-        igo(drive, turnd, 17.5);
+        igo(drive, turnd, 15.5);
     }
     { // get rnmogo
         double turnd = 90;
@@ -433,5 +434,5 @@ ConsoleSelector autons(
             Auton("skills", sKILLS),                                             // TODONE?
             Auton("stupod", stupod),                                             // !!! STUPOD !!!
         },
-        4), // defaulton
+        3), // defaulton
     &console);
