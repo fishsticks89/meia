@@ -147,11 +147,15 @@ void lrushrings(meia::ChassisController* drive) {
     go(drive, 5);
 }
 
-void rushclamp(meia::ChassisController* drive) {
+void leftrushclamp(meia::ChassisController* drive) {
+    double turnd = 0;
+    lift.set_voltage(-8000);
     clamp.deactivate();
-    std::cout << meia::p::debting_go(drive, 41, 70, 240) << std::endl;
+    std::cout << igo(drive, turnd, 50, 45, 150, meia::Pid(2, 0, 0)) << std::endl;
     clamp.activate();
-    std::cout << meia::p::debting_go(drive, -41, 70, 240) << std::endl;
+    lift.set_voltage(0);
+    pros::delay(100);
+    std::cout << igo(drive, turnd, -50, 45, 240, meia::Pid(2, 0, 0)) << std::endl;
 }
 
 void trushclamp(meia::ChassisController* drive) {
@@ -168,11 +172,38 @@ void trushclamp(meia::ChassisController* drive) {
     clamp.activate();
     shtick.activate();
     pros::delay(100);
-    std::cout << meia::p::debting_go(drive, -48.5, 60, 240) << std::endl;
+    std::cout << igo(drive, 0, -48.5, 60, 240) << std::endl;
     pros::delay(50);
-    turn(drive, 25, 360, 1000);
-    std::cout << meia::p::debting_go(drive, 34, 70, 240) << std::endl;
-    std::cout << meia::p::debting_go(drive, -34, 70, 240) << std::endl;
+    double turnd = 28;
+    iturn(drive, turnd, 360, 1000);
+    std::cout << igo(drive, turnd, 34, 70, 240) << std::endl;
+    std::cout << igo(drive, turnd, -34, 70, 240) << std::endl;
+}
+
+void rthenleft(meia::ChassisController* drive) {
+    double turnd = 0;
+    // shtick nmogo
+    shtick.activate();
+    int start_time = pros::millis();
+    std::cout << igo(drive, turnd, 34, 60, 150) << std::endl;
+    std::cout << igo(drive, turnd, -34, 60, 90) << std::endl;
+    std::cout << "time: " << pros::millis() - start_time << std::endl;
+    if (pros::millis() - start_time > 2700) {
+        while (true) {
+            std::cout << meia::p::debting_go(drive, -35, 70, 240) << std::endl;
+        }
+    }
+    shtick.deactivate();
+    pros::delay(300);
+    turnd = -26;
+    iturn(drive, turnd);
+    clamp.deactivate();
+    lift.set_voltage(-8000);
+    igo(drive, turnd, 50);
+    clamp.activate();
+    pros::delay(200);
+    lift.set_voltage(0);
+    igo(drive, turnd, -43);
 }
 
 void soloawp(meia::ChassisController* drive) {
@@ -433,14 +464,15 @@ void stupod(meia::ChassisController* drive) {
 ConsoleSelector autons(
     Autoselector(
         {
-            Auton("SOLOAWP SHKOSH", soloawp),                                    // 0
-            Auton("shtick rush both sides", goalrush),                           // 1
-            Auton("left shtick rush w/rings", lrushrings),                       // 2
-            Auton("right clamp rush w/rings", rightrushrings),                   // 3
-            Auton("right shtick rush nmogo and right", trushclamp),              // 4
-            Auton("rush with clamp forgot which side probably left", rushclamp), // 5
-            Auton("skills", sKILLS),                                             // 6
-            Auton("stupod", stupod),                                             // 7
+            Auton("SOLOAWP SHKOSH", soloawp),                       // 0
+            Auton("shtick rush both sides", goalrush),              // 1
+            Auton("left shtick rush w/rings", lrushrings),          // 2
+            Auton("left clamp", leftrushclamp),                     // 3
+            Auton("right clamp rush w/rings", rightrushrings),      // 4
+            Auton("right shtick rush nmogo and right", trushclamp), // 5
+            Auton("get right neutral then big neutral", rthenleft), // 6
+            Auton("skills", sKILLS),                                // 7
+            Auton("stupod", stupod),                                // 8
         },
-        4), // defaulton
+        3), // defaulton
     &console);
