@@ -157,15 +157,15 @@ namespace meia {
             pid_info.pid_correct.first = pid_info.left_pid.calc(io->left_target - (pid_info.motor_positions.first / io->ticks_per_inch), io->allowderivative);
             pid_info.pid_correct.second = pid_info.right_pid.calc(io->right_target - (pid_info.motor_positions.second / io->ticks_per_inch), io->allowderivative);
 
-            // {
-            //     const int time = pros::millis();
-            //     if ((time - (time % delta_time)) % 200 == 0) {
-            //         std::cout << "pid - targeet: " << io->left_target << ", " << io->right_target << std::endl;
-            //         std::cout << "pid - tpi: " << io->ticks_per_inch << std::endl;
-            //         std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first / io->ticks_per_inch) << ", " << dub_to_string(pid_info.motor_positions.second / io->ticks_per_inch) << std::endl;
-            //         std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
-            //     }
-            // }
+            {
+                const int time = pros::millis();
+                if ((time - (time % delta_time)) % 200 == 0) {
+                    // std::cout << "pid - targeet: " << io->left_target << ", " << io->right_target << std::endl;
+                    // std::cout << "pid - tpi: " << io->ticks_per_inch << std::endl;
+                    // std::cout << "pid - current_pos: " << dub_to_string(pid_info.motor_positions.first / io->ticks_per_inch) << ", " << dub_to_string(pid_info.motor_positions.second / io->ticks_per_inch) << std::endl;
+                    std::cout << "pid - voltiage: " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).first << ", " << normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127).second << std::endl;
+                }
+            }
 
             io->chassis_ptr->set_voltage(normalize(pid_info.pid_correct.first, pid_info.pid_correct.second, 127));
             io->mutex.give();

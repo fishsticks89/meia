@@ -70,38 +70,33 @@ void goalrush(meia::ChassisController* drive) {
 }
 
 void rightrushrings(meia::ChassisController* drive) {
+    double turnd = 0;
+    lift.set_voltage(-7000);
+    clamp.deactivate();
     mogo.deactivate();
-    shtick.activate();
     // shtick nmogo
     int start_time = pros::millis();
-    std::cout << meia::p::debting_go(drive, 34, 60, 150) << std::endl;
-    std::cout << meia::p::debting_go(drive, -34, 60, 90) << std::endl;
+    std::cout << igo(drive, turnd, 43, 45, 150) << std::endl;
+    clamp.activate();
+    pros::delay(150);
+    std::cout << igo(drive, turnd, -26, 45, 90) << std::endl;
     std::cout << "time: " << pros::millis() - start_time << std::endl;
-    if (pros::millis() - start_time > 2700) {
+    if (pros::millis() - start_time > 3000) {
         while (true) {
             std::cout << meia::p::debting_go(drive, -35, 70, 240) << std::endl;
         }
     }
-    drive->set_pid_constants(drive_pid);
-    lift.set_voltage(-4000);
-    clamp.deactivate();
-    shtick.deactivate();
-    pros::delay(200);
-    // get nmogo in clamp
-    meia::p::turn(drive, 10, 30, 100, drive_width);
-    meia::p::debting_go(drive, 19, 50, 360);
-    clamp.activate();
-    pros::delay(100);
-    lift.set_target(20);
-    pros::delay(400);
+    lift.set_target(30);
     // get rmogo in
-    turn(drive, imu.get_dist(true, -90), 140, 300);
+    iturn(drive, -90, 140, 300);
     lift.set_voltage(-4000);
-    meia::p::debting_go(drive, -17.7, 20, 900);
+    meia::p::debting_go(drive, -14, 20, 20);
+    pros::delay(150);
     mogo.activate();
     pros::delay(300);
     lift.set_target(40);
-    meia::p::debting_go(drive, 5, 30, 6000);
+
+    // meia::p::debting_go(drive, 2, 30, 6000);
     meia::p::turn(drive, 91, 90, 360, drive_width);
     lift.set_target(50);
     take.move_voltage(12000);
@@ -226,7 +221,7 @@ void sKILLS(meia::ChassisController* drive) {
     drive_width = 14.41;
     { // get first mogo
         mogo.deactivate();
-        pros::delay(1200);
+        pros::delay(2000);
         go(drive, -3, 20, 8);
         mogo.activate();
         pros::delay(100);
@@ -417,22 +412,35 @@ void sKILLS(meia::ChassisController* drive) {
 }
 
 void stupod(meia::ChassisController* drive) {
+    mogo.deactivate();
+    pros::delay(1000);
     double turnd = 0;
-    std::cout << "debt:" << igo(drive, turnd, -50, 2, 130) << std::endl;
-    std::cout << "debt:" << igo(drive, turnd, 50, 2, 130) << std::endl;
+    go(drive, -15, 1, 10);
+    pros::delay(1000);
+    mogo.activate();
+    pros::delay(1000);
+    take.move_voltage(12000);
+
+    pros::delay(1000);
+    go(drive, 15, 3);
+    pros::delay(6000);
+    mogo.deactivate();
+    go(drive, 10);
+    go(drive, -7);
+    go(drive, 10);
 }
 
 ConsoleSelector autons(
     Autoselector(
         {
-            Auton("SOLOAWP SHKOSH", soloawp),                                    // *
-            Auton("shtick rush both sides", goalrush),                           // *
-            Auton("left shtick rush w/rings", lrushrings),                       // *
-            Auton("right shtick rush w/rings", rightrushrings),                  // *
-            Auton("right shtick rush nmogo and right", trushclamp),              // *
-            Auton("rush with clamp forgot which side probably left", rushclamp), // TODO
-            Auton("skills", sKILLS),                                             // TODONE?
-            Auton("stupod", stupod),                                             // !!! STUPOD !!!
+            Auton("SOLOAWP SHKOSH", soloawp),                                    // 0
+            Auton("shtick rush both sides", goalrush),                           // 1
+            Auton("left shtick rush w/rings", lrushrings),                       // 2
+            Auton("right clamp rush w/rings", rightrushrings),                   // 3
+            Auton("right shtick rush nmogo and right", trushclamp),              // 4
+            Auton("rush with clamp forgot which side probably left", rushclamp), // 5
+            Auton("skills", sKILLS),                                             // 6
+            Auton("stupod", stupod),                                             // 7
         },
-        3), // defaulton
+        4), // defaulton
     &console);
