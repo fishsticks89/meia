@@ -1,11 +1,37 @@
 #include "chassis_util.cpp"
 #include "main.h"
 namespace meia {
+    //! PID system
+    struct pid_internal {
+            pid_internal(double p, double i, double d)
+                : kp(p), ki(i), kd(d){};
+            const double kp;
+            const double ki;
+            const double kd;
+            int accumulated_integral_error = 0;
+            int prev_error = 0;
+            void reset() {
+                accumulated_integral_error = 0;
+                prev_error = 0;
+            }
+            double calc(double diff) {
+                // new pid is calculated
+                const double p = diff;
+                const double i = accumulated_integral_error + diff;
+                const double d = prev_error - diff;
+                // telem for next calc
+                prev_error = diff;
+                accumulated_integral_error += diff;
+                // correction is calculated
+                return (p * kp) + (i * ki) + (d * kd);
+            }
+    };
+
     std::pair<double, double> add_pair(std::pair<double, double> a, std::pair<double, double> b) {
         return {a.first + b.first, a.second + b.second};
     }
-    std::pair<double, double> add_pair(std::pair<double, double> a, double b) {
-        return {a.first + b, a.second + b};
+    std::pair<double, double> make_pair(double p) {
+        return {p, p};
     }
     //! Util Funcs
     /**
@@ -13,7 +39,7 @@ namespace meia {
      * \param direction
      *      true if left
      */
-    static double get_turn(bool direction, double current, double target) {
+    double Drive::get_turn(bool direction, double current, double target) {
         if (target < -180 || target > 180)
             throw "target must be -180 to 180";
         if ((target < current) == direction)
@@ -22,61 +48,19 @@ namespace meia {
             return (target - current) - 360;
         else if (!direction)
             return 360 + (target - current);
+        return 0;
     }
-    Drive::MovementInfo::MovementInfo(move_type_e type, Curve start_curve, Curve end_curve, double max_speed, double distance, int delay_time, int id)
-        : start(start_curve), end(end_curve), max_speed(max_speed), distance(distance), type(type), id(id) {
-        // gets the iterations of the start curve if it exists
-        if (start_curve.acceleration != 0) {
-            start_curve_iterations = get_curve_iterations(
-                (                            // how often the curve will be sampled
-                    (delay_time / 1000.0)    // the ms interval the curve will be sampled at (converted to sec)
-                    *                        // the acceleration of the curve (the multiplier for the in/ms normal acceleration)
-                    start_curve.acceleration // the acceleration of the curve in in/s^2
-                    ),
-                // the robot only needs to accelerate the difference between
-                max_speed - start_curve.endpoint_speed, // max value output of the curve to be sampled
-                start_curve.antijerk_percent            // the antijerk percent of the curve to be sampled
-            );
-        } else {
-            start_curve_iterations = 0;
-        }
-        start_curve_distance = (get_curve_distance(
-                                    (delay_time / 1000.0) *                 // the curve can only be sampled as often as the delay_time of the loop (to sec)
-                                        start_curve.acceleration,           // multiplied by the acceleration factor in in/sec
-                                    max_speed - start_curve.endpoint_speed, // max value output of the curve to be sampled
-                                    start_curve.antijerk_percent) +
-                                   (start_curve_iterations * start_curve.endpoint_speed)) // the block of endpoint speed upon which the
-                               * delay_time / 1000.0;                                     // the curve and endpoint speed output must be multiplied by delay (in sec) time to ensure a consistant output across all delay times
-        if (end_curve.acceleration != 0) {
-            end_curve_iterations = get_curve_iterations(
-                (                          // how often the curve will be sampled
-                    (delay_time / 1000.0)  // the ms interval the curve will be sampled at (sec)
-                    *                      // the acceleration of the curve (the multiplier for the in/ms normal acceleration)
-                    end_curve.acceleration // the acceleration of the curve in in/s^2
-                    ),
-                // the robot only needs to accelerate the difference between
-                max_speed - end_curve.endpoint_speed, // max value output of the curve to be sampled
-                end_curve.antijerk_percent            // the antijerk percent of the curve to be sampled
-            );
-        } else {
-            end_curve_iterations = 0;
-        }
-        end_curve_distance = (get_curve_distance(
-                                  (delay_time / 1000.0) *               // the curve can only be sampled as often as the delay_time of the loop (to sec)
-                                      end_curve.acceleration,           // multiplied by the acceleration factor in in/sec
-                                  max_speed - end_curve.endpoint_speed, // max value output of the curve to be sampled
-                                  end_curve.antijerk_percent) +
-                                 (end_curve_iterations * end_curve.endpoint_speed)) // the block of endpoint speed upon which the
-                             * delay_time / 1000.0;                                 // the curve and endpoint speed output must be multiplied by delay (in sec) time to ensure a consistant output across all delay times
-        int body_iterations = std::round((distance - (start_curve_distance + end_curve_distance)) / (max_speed * delay_time / 1000.0));
-        total_iterations = start_curve_iterations + end_curve_iterations + body_iterations;
-        debt = distance - ((body_iterations * max_speed * delay_time / 1000) + start_curve_distance + end_curve_distance);
-    };
+    Drive::FramalIncrement Drive::Advance::get_increment(int iter) {
+        if (iter * (delay_time / 1000) * cruise_vel < dist)
+            return FramalIncrement(0, (cruise_vel / 1000) * delay_time);
+        else
+            return FramalIncrement(0, 0);
+    }
     //! inherited from ChassisController
     void Drive::tank_control(pros::Controller con, pros::motor_brake_mode_e_t brake_mode, double curve_intensity, int deadzone) {
         profiling_task_messenger.mutex.take(10000);
         profile_loop_task.suspend();
-        profiling_task_messenger.chassis_ptr->tank_control(con, brake_mode, curve_intensity, deadzone);
+        profiling_task_messenger.chassis_ptr->tank_control(&con, brake_mode, curve_intensity, deadzone);
         profiling_task_messenger.mutex.give();
     }
     std::pair<std::vector<double>, std::vector<double>> Drive::get_motor_temps() {
@@ -90,14 +74,14 @@ namespace meia {
         std::cout << "yep";
         profile_loop_task.suspend();
         std::cout << "yep";
-        profiling_task_messenger.current = MovementInfo();
+        profiling_task_messenger.current = std::make_shared<Movement>();
         std::cout << "yep";
-        profiling_task_messenger.next = MovementInfo();
+        profiling_task_messenger.next = std::make_shared<Movement>();
         std::cout << "yep";
-        profiling_task_messenger.total_error = 0;
+        // profiling_task_messenger.total_error = 0;
         std::cout << "yep";
         profiling_task_messenger.reset = true;
-        profiling_task_messenger.chassis_ptr->end();
+        profiling_task_messenger.chassis_ptr->tare();
         std::cout << "yep" << std::endl;
         profiling_task_messenger.imu->tare();
         profiling_task_messenger.mutex.give();
@@ -146,19 +130,19 @@ namespace meia {
         profiling_task_messenger.mutex.give();
     }
     //! PID telemetry
-    double Drive::get_turn_total_error() {
-        profiling_task_messenger.mutex.take(10000);
-        double total_error = profiling_task_messenger.total_error;
-        profiling_task_messenger.mutex.give();
-        return total_error;
-    }
+    // double Drive::get_turn_total_error() {
+    //     profiling_task_messenger.mutex.take(10000);
+    //     // double total_error = profiling_task_messenger.total_error;
+    //     profiling_task_messenger.mutex.give();
+    //     return total_error;
+    // }
 
-    MovementTelemetry Drive::move(move_type_e type, double distance, double max_speed, Curve start, Curve end) {
+    /* MovementTelemetry */ void Drive::move(move_type_e type, double distance, double max_speed, double start_acc, double end_acc) {
         profile_loop_task.resume();
         bool break_allowed = false;
         while (!break_allowed) {
             profiling_task_messenger.mutex.take(3000);
-            break_allowed = profiling_task_messenger.next.type == none;
+            break_allowed = profiling_task_messenger.next->type() == none;
             profiling_task_messenger.mutex.give();
             // std::cout << "move_req - waiting for allowed" << std::endl;
             if (!break_allowed)
@@ -167,23 +151,29 @@ namespace meia {
         profiling_task_messenger.mutex.take(3000);
         int id = pros::millis();
         std::cout << "move_req - injecting >> " << id << std::endl;
-        profiling_task_messenger.next = MovementInfo(type, start, end, max_speed, distance, id, delay_time);
+        if (type == advance) {
+            profiling_task_messenger.next = std::make_shared<Drive::Advance>(distance, start_acc, max_speed, end_acc, delay_time, id);
+            std::cout << "Next ID: " << profiling_task_messenger.next->get_id() << std::endl;
+            std::cout << "Next Type: " << profiling_task_messenger.next->type() << std::endl;
+            std::cout << "Current ID: " << profiling_task_messenger.current->get_id() << std::endl;
+            std::cout << "Current Type: " << profiling_task_messenger.current->type() << std::endl;
+        }
         profiling_task_messenger.mutex.give();
         // waits for movement to begin
         break_allowed = false;
         while (!break_allowed) {
             profiling_task_messenger.mutex.take(3000);
             // std::cout << "move_req - awiatign begin >> " << id << std::endl;
-            break_allowed = profiling_task_messenger.current.id == id;
-            // std::cout << "move_req - current move: >> " << profiling_task_messenger.current.id << std::endl;
+            break_allowed = profiling_task_messenger.current->get_id() == id;
+            // std::cout << "move_req - current move: >> " << profiling_task_messenger.current.get_id() << std::endl;
             profiling_task_messenger.mutex.give();
             if (!break_allowed)
                 pros::delay(10);
         }
         std::cout << "move_req - dun" << std::endl;
-        std::cout << profiling_task_messenger.current.id << std::endl;
+        std::cout << profiling_task_messenger.current->get_id() << std::endl;
 
-        return MovementTelemetry(distance, &profiling_task_messenger.amount_completed, &profiling_task_messenger.current.id, &profiling_task_messenger.mutex, id);
+        return;
     }
 
     //! The Task
@@ -201,81 +191,69 @@ namespace meia {
         (*(Profiling_task_messenger_struct*)p).mutex.give(); // returns the mutex
 
         struct profiling_info_struct {
-                profiling_info_struct(){};
+                profiling_info_struct(double p, double i, double d)
+                    : turn(p, i, d){};
                 struct turn_struct {
-                        turn_struct(){};
+                        turn_struct(double p, double i, double d)
+                            : turn_pid(p, i, d){};
                         double imu_reading;
-                        double correct;
-                        std::pair<double, std::pair<double, double>> pid_hold = {0, {0, 0}};
+                        double error;
+                        double correction;
+                        pid_internal turn_pid;
                         double target = 0; // rotational target for turn pid in degrees
                 } turn;
                 struct profiling_struct {
                         int i = 0;
                 } profiling;
                 std::pair<double, double> change_target = {0, 0};
-        } info;
+        } info(io->p, io->i, io->d);
 
         while (true) {
             io->mutex.take(3000);
             // reset logic
             if (io->reset) {
                 // resets pid
-                info.turn.pid_hold = {0, {0, 0}};
+                info.turn.turn_pid.reset();
                 // resets profiling
-                io->resetMove();
                 info.profiling = profiling_info_struct::profiling_struct();
                 io->reset = false;
             }
             // new move logic
-            // std::cout << "current: " << io->current.id << std::endl;
-            // std::cout << "next: " << io->next.id << std::endl;
+            // std::cout << "current: " << io->current.get_id() << std::endl;
+            // std::cout << "next: " << io->next.get_id() << std::endl;
 
-            if (std::abs(io->amount_completed) >= std::abs(io->current.distance) || io->current.type == none) {
+            if ((io->current->get_increment(info.profiling.i).delta_advance == 0 && io->current->get_increment(info.profiling.i).delta_turn == 0) || io->current->type() == none || io->current->get_id() == 0) {
                 // std::cout<<"operating!\n";
                 io->current = io->next;
-                io->next = MovementInfo();
+                io->next = std::make_shared<Movement>();
                 info.profiling.i = 0;
-                std::cout << "current start curve iterations: " << std::to_string(io->current.debt) << "\n";
             }
-            std::cout << "prof - req move dist: " << io->current.distance << std::endl;
-            std::cout << "prof - amount move dist completed: " << io->amount_completed << std::endl;
 
             info.change_target = {0, 0};                      // resets the amount the robot must move
             info.turn.imu_reading = io->imu->get_euler().yaw; // reads in global z axis from imu
 
             //! Motion Profiling Stuff
-            if (io->current.type == drive) {
-                if (info.profiling.i <= io->current.start_curve_iterations)
-                    info.change_target = add_pair(info.change_target, (curve(info.profiling.i * (io->current.start.acceleration / 1000.0), io->current.max_speed - io->current.start.endpoint_speed, io->current.start.antijerk_percent) + io->current.start.endpoint_speed) * (delta_time / 1000.0));
-                else if (info.profiling.i < io->current.total_iterations - io->current.end_curve_iterations)
-                    info.change_target = add_pair(info.change_target, io->current.max_speed * (delta_time / 1000.0));
-                else
-                    info.change_target = add_pair(info.change_target, (curve((io->current.total_iterations - io->current.end_curve_iterations) * (io->current.end.acceleration / 1000), io->current.max_speed - io->current.end.endpoint_speed, io->current.end.antijerk_percent) + io->current.end.endpoint_speed) * (delta_time / 1000.0));
-                io->amount_completed += info.change_target.first;
-                info.profiling.i++;
-            } else if (io->current.type == turn) {
-                info.turn.target += io->current.distance;
-            }
+            const FramalIncrement increment = io->current->get_increment(info.profiling.i);
+            info.change_target = {increment.delta_advance, increment.delta_advance};
+            info.profiling.i++;
 
-            //! Turn Pid Stuff
-            if (io->current.type == drive || io->current.type == hold) {
+            if (io->current->type() != none) {
+                //! Turn Pid Stuff
                 if (!io->imu_calibrated)
                     throw "imu not calibrated";
-                info.turn.correct = (std::abs(get_dist(true, info.turn.imu_reading, info.turn.target)) < std::abs(get_dist(false, info.turn.imu_reading, info.turn.target)) ? get_dist(true, info.turn.imu_reading, info.turn.target) : get_dist(false, info.turn.imu_reading, info.turn.target));
-                info.turn.pid_hold = pid(0, info.turn.correct, io->p, io->i, io->d, info.turn.pid_hold.second, io->delta_time);
-                info.change_target = add_pair(info.change_target, {info.turn.pid_hold.first / -10000, info.turn.pid_hold.first / 10000});
+                info.turn.error = (std::abs(get_dist(true, info.turn.imu_reading, info.turn.target)) < std::abs(get_dist(false, info.turn.imu_reading, info.turn.target)) ? get_dist(true, info.turn.imu_reading, info.turn.target) : get_dist(false, info.turn.imu_reading, info.turn.target));
+                info.turn.correction = info.turn.turn_pid.calc(info.turn.error) * delta_time;
+                info.change_target = add_pair(info.change_target, {info.turn.correction / -10000, info.turn.correction / 10000});
             }
-
-            // Todo: debting (so move amount_completed here)
 
             //! Output
             // std::cout << "prof - delta target: " << info.change_target.first << std::endl;
-            io->chassis_ptr->change_target(info.change_target.first, info.change_target.second);
-            io->total_error += std::abs(info.turn.pid_hold.second.second) / (io->delta_time * 100000);
-            io->mutex.give();
+            io->chassis_ptr->change_target({info.change_target.first, info.change_target.second});
+            // io->total_error += std::abs(info.turn.pid_hold.second.second) / (io->delta_time * 100000);
 
-            pros::lcd::set_text(5, "prof - imu_read: " + dub_to_string(info.turn.imu_reading) + " target: " + dub_to_string(info.turn.target));
-            pros::lcd::set_text(6, "prof - imu_pid-correction: " + dub_to_string(info.turn.pid_hold.first) + " {" + dub_to_string(info.change_target.first * 10000) + ", " + dub_to_string(info.change_target.first * 100) + "}");
+            // pros::lcd::set_text(5, "prof - imu_read: " + dub_to_string(info.turn.imu_reading) + " target: " + dub_to_string(info.turn.target));
+            // pros::lcd::set_text(6, "prof - imu_pid-correction: " + dub_to_string(info.turn.correction) + " {" + dub_to_string(info.change_target.first * 10000) + ", " + dub_to_string(info.change_target.first * 100) + "}");
+            io->mutex.give();
             pros::delay(delta_time);
         }
     }

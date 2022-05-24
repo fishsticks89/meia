@@ -50,6 +50,6 @@ namespace meia {
              * \param deadzone
              *         the minimum movement of the controller (out of 100) before the motors are moved
              */
-            void tank_control(pros::Controller con = pros::Controller(pros::E_CONTROLLER_MASTER), double curve_intensity = 0, int deadzone = 0);
+            void tank_control(pros::Controller* con = new pros::Controller(pros::E_CONTROLLER_MASTER), double curve_intensity = 0, int deadzone = 0);
     };
 } // namespace meia

@@ -1,6 +1,6 @@
 #include <cmath>
-#include <utility>
 #include <string>
+#include <utility>
 namespace meia {
     // cos but degrees
     inline static const double degrees_to_radians = 0.01745329252;
@@ -40,9 +40,9 @@ namespace meia {
     /**
      * \param increment
      *      how often the curve is sampled
-     * \param acceleration 
+     * \param acceleration
      *      the multiplier on the speed of the curve
-     * \param 
+     * \param
      */
     inline int get_curve_iterations(double increment, double max, double antijerk_percent) {
         if (increment <= 0)
@@ -103,6 +103,10 @@ namespace meia {
         else if (!left)
             return (360 + (target - current));
         throw "internalerr";
+    }
+
+    inline int get_fac(bool fac) {
+        return (2 * (fac - 0.5));
     }
 
 } // namespace meia

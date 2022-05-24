@@ -3,8 +3,8 @@ namespace meia {
     class Timer {
     private:
         int start_time = pros::millis();
-        int held_time = pros::millis();
-        bool paused = pros::millis();
+        int held_time = 0;
+        bool paused = true;
         pros::Mutex mutex;
     public:
         // resets and begins the timer 

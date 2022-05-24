@@ -9,8 +9,10 @@ namespace meia {
     }
     void Timer::resume() {
         mutex.take(3000);
-        start_time = pros::millis() - held_time;
-        held_time = 0;
+        if (paused) {
+            start_time = pros::millis() - held_time;
+            held_time = 0;
+        }
         paused = false;
         mutex.give();
     }

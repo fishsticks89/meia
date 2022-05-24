@@ -8,39 +8,39 @@ namespace meia {
             Pid(double p, double i, double d)
                 : p(p), i(i), d(d){};
     };
+    class Acceleration {
+        const double start_vel;
+        const double acc;
+        Acceleration(double start_vel, double acc) : start_vel(start_vel), acc(acc) {}; 
+    };
     /**
-     * A Curve for an end of a motion profiled motion
-     *  \param acceleration
-     *      The acceleration of the curve measured in (deg or units)/second^2.
-     *      Play around with this to find your robot's max acceleleration (make sure drive.getBehind() is never over 0)
-     *  \param endpoint_speed
-     *      The speed at the endpoint of the curve
-     *      If you do not understand this, leave at 0
-     *  \param antijerk_percent
-     *      On this graph, the x axis is time and the y axis is velocity: https://www.desmos.com/calculator/kqs7xawjnq
-     *      Antijerk percent, or the 'f' slider, is the % the 'corners' of the motion profile are rounded off to reduce jerk
-     *      If you do not understand this, leave at 0
+     * A class to represent a turn acceleration
+     * \param start_vel
+     *      The rotational velocity to accelerate from (deg/sec)
+     * \param acc
+     *      The acceleration to reach the peak velocity with (deg/sec^2)
      */
-    class Curve {
-        public:
-            Curve(double acceleration = 0, double endpoint_speed = 0, double antijerk_percent = 0)
-                : endpoint_speed(endpoint_speed), acceleration(acceleration), antijerk_percent(antijerk_percent){};
-            double endpoint_speed;
-            double acceleration;
-            double antijerk_percent;
-    };
-    class MovementTelemetry {
-        private:
-            double total_move = 1;
-            double* amount_completed;
-            pros::Mutex* mutex;
-            int id = -1;
-            int* current_id;
+    class RotationalAcceleration : Acceleration {};
+    /**
+     * A class to represent a directional acceleration
+     * \param start_vel
+     *      The linear velocity to accelerate from (in/sec)
+     * \param acc
+     *      The acceleration to reach the peak velocity with (in/sec^2)
+     */
+    class LinearAcceleration : Acceleration {};
+    // class MovementTelemetry {
+    //     private:
+    //         double total_move = 1;
+    //         double* amount_completed;
+    //         pros::Mutex* mutex;
+    //         int id = -1;
+    //         int* current_id;
 
-        public:
-            MovementTelemetry(double total_move, double* amount_completed, int* current_id, pros::Mutex* mutex, int id)
-                : total_move(total_move), amount_completed(amount_completed), mutex(mutex), id(id), current_id(current_id) {};
-            MovementTelemetry() {};
-            void wait_until(double val);
-    };
+    //     public:
+    //         MovementTelemetry(double total_move, double* amount_completed, int* current_id, pros::Mutex* mutex, int id)
+    //             : total_move(total_move), amount_completed(amount_completed), mutex(mutex), id(id), current_id(current_id) {};
+    //         MovementTelemetry() {};
+    //         void wait_until(double val);
+    // };
 } // namespace meia

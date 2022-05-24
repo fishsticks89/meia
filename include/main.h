@@ -40,8 +40,6 @@
 /**
  * You should add more #includes here
  */
-//#include "okapi/api.hpp"
-//#include "pros/api_legacy.h"
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
@@ -77,6 +75,14 @@ void opcontrol(void);
  * You can add C++-only headers here
  */
 //#include <iostream>
+#include "set_timeout.hpp"
+#include "controlutil.hpp"
+#include "pneumaticutil.hpp"
+#include "motorutil.hpp"
+#include "autoselector.hpp"
+#include "motors.hpp"
+#include "autons.hpp"
+
 #endif
 
 #endif  // _PROS_MAIN_H_
