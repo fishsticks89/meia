@@ -1,5 +1,5 @@
 ![meia](./docs/assets/logo.svg)
 
-A PROS library for creating reliable autons with beginners in mind, and Worlds on the horizon.
+Pure pursuit demo in PROS
 
 Created by Harvard Westlake Student Michael Barr under team 462a
