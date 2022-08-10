@@ -26,6 +26,7 @@ We used this code for the 2021-2022 season, and made it to worlds. It is the mos
     I came up with debt off the top of my head, and I don't know the proper term so we are going for it.
     Pure pursuit works by setting a PID target for each side of the drive (in our case, using the `chassis_controller` class), and then slowly incrementing it for both sides. by doing this, you can ensure both wheels go the same amount, and can get reasonably good heading maintainance without a compace, gps, or imu. Of course there are always bumps in the field, so we need to use the imu to correct for that. To do this, we define a proportional constant that converts the rotational error of the imu into a delta target for each of the wheels. However, we cannot do so recursively, or else the same distance correction would be continually applied. Instead, we ensure that the difference in error between the wheels is the distance correction.
     These have the following benefits:
+    **PID constants for both heading and distance can be kept insanely tight: there is little to no fear of overshooting since we apply a decel curve, so we always hit the same mark**
     Complex motion (think reduced-jerk figure 8s, elipses, maybe a GELU curve idk), since we can change the target for each side of the drive every tick.
     Since we use the chassis PID instead of an IMU PID, we end up with infinitely tighter heading correction in practice. It is actually insane.
     
