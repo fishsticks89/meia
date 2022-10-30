@@ -5,7 +5,7 @@ Pure pursuit demo in PROS
 We used this code for the 2021-2022 season and made it to worlds! It is the most thrown-together code I have ever seen, however, it has two key advantages:
 
 1. Normalization - 
-    Usually, when using linear and rotational PID, you have to set a lower forward voltage so that the rotational voltage is not canceled out on one side.
+    Usually, when using a seperate PID controller for forward/backward and rotational targets, you have to cap the voltage outputted by the forward/backward PID controller so that the rotational voltage is not out of bounds on one side.
     ![image](https://user-images.githubusercontent.com/61331006/183824458-847c8510-6430-4433-ad53-5a1f281fef75.png)
     We use the below technique to normalize the voltages: 
     ```cpp
